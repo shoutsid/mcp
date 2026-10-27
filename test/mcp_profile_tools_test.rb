@@ -6,7 +6,7 @@ require_relative "test_helper"
 # proposal and says so; a tool that scans a delta names what moved rather than re-reporting the
 # whole tree.
 class McpProfileToolsTest < McpTest
-  BANNER = AgentsFyiMcp::Rendering::UNTRUSTED_BANNER
+  BANNER = AgentsMcp::Rendering::UNTRUSTED_BANNER
 
   def test_the_delta_tool_sends_the_manifest_and_renders_the_classification
     api.respond(
@@ -41,7 +41,7 @@ class McpProfileToolsTest < McpTest
   end
 
   def test_a_delta_with_nothing_to_read_is_refused_before_the_network
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.scan_upgrade_delta(
         "from_version" => "7.0.0", "to_version" => "7.1.0", "files" => "", "deleted" => ""
       )

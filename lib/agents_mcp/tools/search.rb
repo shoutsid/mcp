@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module AgentsFyiMcp
+module AgentsMcp
   class Tools
     # The search tools' behaviour. The method names are the names `HANDLERS` dispatches
     # to, so nothing in the behaviour suite moved when this file was split out.

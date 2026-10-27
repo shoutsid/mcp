@@ -10,18 +10,18 @@
 # without the caller knowing where the component's Gemfile is.
 #
 # **The bundle lives outside the checkout by default.** A `vendor/bundle` in the tree is a second
-# copy of a lockfile's answer that a build can accidentally ship; `~/.cache/agents-fyi-mcp` is a
-# cache, and `AGENTS_FYI_MCP_BUNDLE` (or `BUNDLE_PATH`) points it somewhere else when a machine
+# copy of a lockfile's answer that a build can accidentally ship; `~/.cache/agents-mcp` is a
+# cache, and `AGENTS_MCP_BUNDLE` (or `BUNDLE_PATH`) points it somewhere else when a machine
 # wants to. `scripts/dev.sh mcp` installs to the same default, so a local run and this entrypoint
 # agree without either one configuring the other.
 root = File.expand_path("..", __dir__)
 ENV["BUNDLE_GEMFILE"] ||= File.join(root, "Gemfile")
-ENV["BUNDLE_PATH"] ||= ENV["AGENTS_FYI_MCP_BUNDLE"] ||
-  File.join(Dir.home, ".cache", "agents-fyi-mcp", "bundle")
+ENV["BUNDLE_PATH"] ||= ENV["AGENTS_MCP_BUNDLE"] ||
+  File.join(Dir.home, ".cache", "agents-mcp", "bundle")
 
 require "bundler/setup"
 
 $LOAD_PATH.unshift(File.join(root, "lib"))
-require "agents_fyi_mcp"
+require "agents_mcp"
 
-AgentsFyiMcp.main
+AgentsMcp.main

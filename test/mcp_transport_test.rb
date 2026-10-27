@@ -97,19 +97,19 @@ class McpTransportTest < McpTest
     end
   end
 
-  # The path `/.well-known/agents-fyi.json` names as this service's MCP server. It is not the
-  # entrypoint the harness or `.mcp.json` launch — those name `bin/agents-fyi-mcp` — but it is a
+  # The path `/.well-known/agents.json` names as this service's MCP server. It is not the
+  # entrypoint the harness or `.mcp.json` launch — those name `bin/agents-mcp` — but it is a
   # documented command, and a documented command that stopped working is a lie in the document
   # whose job is to describe the surface. `test_the_recorded_entrypoint_path_still_answers` drives
   # it for the reason the discovery path exists at all.
-  SHIM = File.expand_path("../agents_fyi_mcp.rb", __dir__)
+  SHIM = File.expand_path("../agents_mcp.rb", __dir__)
 
   def with_session(env = {}, server: McpTestSupport::SERVER)
     stdin, stdout, stderr, waiter = Open3.popen3(
       {
         # Empty key: these tools must not need credentials merely to be listed.
-        "AGENTS_FYI_API_KEY" => "",
-        "AGENTS_FYI_URL" => McpTestSupport::BASE,
+        "AGENTS_API_KEY" => "",
+        "AGENTS_URL" => McpTestSupport::BASE,
       }.merge(env),
       RbConfig.ruby, server
     )
@@ -143,20 +143,20 @@ class McpTransportTest < McpTest
     # harness.
     initialized, listed = handshake
 
-    assert_equal "agents-fyi", initialized.dig("result", "serverInfo", "name")
+    assert_equal "agents", initialized.dig("result", "serverInfo", "name")
     assert_equal "2025-11-25", initialized.dig("result", "protocolVersion")
     served = listed.dig("result", "tools").map { |tool| tool["name"] }
     assert_equal TOOLS.sort, served.sort
   end
 
   def test_the_recorded_entrypoint_path_still_answers
-    # `lib/mcp/agents_fyi_mcp.rb` is the path the frozen discovery document names, so it
+    # `lib/mcp/agents_mcp.rb` is the path the frozen discovery document names, so it
     # keeps working by loading the wrapper rather than repeating its bundle setup. Driven here
-    # because nothing else invokes it: the harness and `.mcp.json` both name `bin/agents-fyi-mcp`,
+    # because nothing else invokes it: the harness and `.mcp.json` both name `bin/agents-mcp`,
     # and a shim no test runs is a path a rename would break silently.
     initialized, listed = handshake(server: SHIM)
 
-    assert_equal "agents-fyi", initialized.dig("result", "serverInfo", "name")
+    assert_equal "agents", initialized.dig("result", "serverInfo", "name")
     assert_equal TOOLS.sort, listed.dig("result", "tools").map { |tool| tool["name"] }.sort
   end
 
@@ -229,7 +229,7 @@ class McpTransportTest < McpTest
 
     assert_equal true, reply.dig("result", "isError")
     text = reply.dig("result", "content").map { |block| block["text"] }.join(" ")
-    assert_includes text, "AGENTS_FYI_API_KEY is not set"
+    assert_includes text, "AGENTS_API_KEY is not set"
     assert_includes text, "Register an operator"
     refute_equal "Error executing tool submit_report", text.strip
   end
@@ -326,12 +326,12 @@ class McpTransportTest < McpTest
   # from its own declared schema. A handler that read one string key somewhere it can nest throws
   # instead of answering, so this is the sweep that catches the next one.
   def test_every_tool_accepts_the_shape_a_transport_delivers
-    AgentsFyiMcp::Surface::ALL.each do |tool|
+    AgentsMcp::Surface::ALL.each do |tool|
       schema = tool.input_schema_value.to_h
       arguments = (schema[:properties] || {}).to_h { |name, property| [name, sample(property)] }
       delivered = JSON.parse(JSON.generate(arguments), symbolize_names: true)
 
-      response = AgentsFyiMcp::Context.respond(tool.tool_name, delivered, { tools: api.tools })
+      response = AgentsMcp::Context.respond(tool.tool_name, delivered, { tools: api.tools })
       assert response.is_a?(MCP::Tool::Response), "#{tool.tool_name} did not answer with a Response"
     end
   end

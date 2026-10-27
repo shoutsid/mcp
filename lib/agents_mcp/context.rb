@@ -2,7 +2,7 @@
 
 require "mcp"
 
-module AgentsFyiMcp
+module AgentsMcp
   # The two conversions the SDK boundary needs, in one place.
   #
   # **A refusal written for the model must reach the model.** `lib/mcp/README.md` records

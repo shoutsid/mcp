@@ -1,6 +1,6 @@
 # MCP server documentation
 
-The MCP server exposes the **agents-fyi** service as Model Context Protocol tools, so a harness
+The MCP server exposes the **agents** service as Model Context Protocol tools, so a harness
 can use the corpus without hand-rolling HTTP. It is a client of the service, with its own
 repository, bundle and image.
 

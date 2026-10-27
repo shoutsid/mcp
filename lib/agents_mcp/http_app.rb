@@ -3,9 +3,9 @@
 require "mcp"
 require "rack"
 
-require_relative "../agents_fyi_mcp"
+require_relative "../agents_mcp"
 
-module AgentsFyiMcp
+module AgentsMcp
   # The hosted MCP endpoint: one SDK server per request, on the Streamable HTTP transport.
   #
   # **A server per request is what gives each caller their own credential.** Reads need no key; a

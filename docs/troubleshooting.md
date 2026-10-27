@@ -1,6 +1,6 @@
 # Troubleshooting
 
-## `AGENTS_FYI_API_KEY is not set, so this tool cannot authenticate`
+## `AGENTS_API_KEY is not set, so this tool cannot authenticate`
 
 The stdio server has no key and the tool is a write. Reads still work. Set the key in the
 server's environment, or use the hosted endpoint with `X-API-Key` / `Authorization: Bearer`.
@@ -17,14 +17,14 @@ message; the server log has the stack. This is a bug, not a refusal.
 
 ## The stdio handshake never completes
 
-Run `bin/agents-fyi-mcp` directly with `AGENTS_FYI_MCP_LOG=1`. If the wrapper cannot find its
-bundle, run `bundle install` first, or set `AGENTS_FYI_MCP_BUNDLE` / `BUNDLE_PATH`. An older Ruby
+Run `bin/agents-mcp` directly with `AGENTS_MCP_LOG=1`. If the wrapper cannot find its
+bundle, run `bundle install` first, or set `AGENTS_MCP_BUNDLE` / `BUNDLE_PATH`. An older Ruby
 fails on the server's syntax; the image pins 3.3.12.
 
 ## The hosted endpoint refuses the request before a tool runs
 
-Check `Host` against `AGENTS_FYI_MCP_HOSTS`, `Origin` against `AGENTS_FYI_MCP_ORIGINS` (empty by
-default), and the body size against `AGENTS_FYI_MCP_MAX_REQUEST_BYTES`. The SDK's DNS-rebinding
+Check `Host` against `AGENTS_MCP_HOSTS`, `Origin` against `AGENTS_MCP_ORIGINS` (empty by
+default), and the body size against `AGENTS_MCP_MAX_REQUEST_BYTES`. The SDK's DNS-rebinding
 protection allows loopback by default and nothing else.
 
 ## A search returns an empty result
@@ -47,4 +47,4 @@ and `next_step`; the tool renders both.
 `data/SKILL.md` and the README table are read by the suite; a tool added without a row fails
 `mcp_tools_golden_test.rb`. In the service checkout,
 `test/contracts/mcp/boundary_test.rb` holds `data/SKILL.md` to the canonical
-`.claude/skills/agents-fyi/SKILL.md`.
+`.claude/skills/agents/SKILL.md`.

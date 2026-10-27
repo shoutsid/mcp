@@ -8,9 +8,9 @@ require "uri"
 # The server logs one JSON line per protocol request, which is right for a deployment and noise
 # beside a test runner's output. Nothing here asserts on the log, so the suite is the one place
 # that turns it off.
-ENV["AGENTS_FYI_MCP_LOG"] ||= "0"
+ENV["AGENTS_MCP_LOG"] ||= "0"
 
-require_relative "../lib/agents_fyi_mcp"
+require_relative "../lib/agents_mcp"
 
 # Shared ground for the MCP suite: the frozen surface, a recorded HTTP transport so
 # the tool behaviours are checked with no deployment behind them, and the report
@@ -26,7 +26,7 @@ module McpTestSupport
   # this repository is vendored as a submodule. The service-wide agreements are not here — they
   # live in the service's `test/contracts/mcp/` — so a path below this root is the client's own.
   ROOT = File.expand_path("..", __dir__)
-  SERVER = File.expand_path("../bin/agents-fyi-mcp", __dir__)
+  SERVER = File.expand_path("../bin/agents-mcp", __dir__)
   BASE = "http://service.test"
 
   # The URL is what actually leaves the process — query string and all — so the tests assert
@@ -71,19 +71,19 @@ module McpTestSupport
     end
 
     def client
-      AgentsFyiMcp::Client.new(
+      AgentsMcp::Client.new(
         base_url: BASE, api_key: @api_key, record: @record, transport: method(:transport)
       )
     end
 
     def tools
-      AgentsFyiMcp::Tools.new(client)
+      AgentsMcp::Tools.new(client)
     end
 
     def transport(method, url, headers, body)
       @calls << Call.new(method: method, url: url, headers: headers, body: body)
       payload, status, extra = @queued
-      AgentsFyiMcp::Response.new(
+      AgentsMcp::Response.new(
         status: status,
         headers: extra.to_h { |name, value| [name.to_s.downcase, value] },
         body: JSON.generate(payload)
@@ -258,7 +258,7 @@ class McpTest < Minitest::Test
   # `handle` rather than the transport where a test is about the protocol's answer rather than the
   # socket; `mcp_transport_test.rb` is the half that opens a real stdio session.
   def sdk_server(tools: nil, client: nil)
-    AgentsFyiMcp::Server.new(tools: tools || api.tools, client: client || api.client).mcp_server
+    AgentsMcp::Server.new(tools: tools || api.tools, client: client || api.client).mcp_server
   end
 
   # One request through the SDK, parsed the way a transport parses it and answered the way a

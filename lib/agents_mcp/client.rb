@@ -6,7 +6,7 @@ require "uri"
 
 require_relative "encoding"
 
-module AgentsFyiMcp
+module AgentsMcp
   # A refusal the caller can act on, and nothing else.
   #
   # Every sentence raised here is written for a caller to act on — register a key, send `q`
@@ -29,13 +29,13 @@ module AgentsFyiMcp
     # What a write with no credential is told, and it is transport-specific: the sentence has to
     # name the thing the *caller* can change.
     #
-    # The stdio server reads `AGENTS_FYI_API_KEY` from its process, so naming the variable is
+    # The stdio server reads `AGENTS_API_KEY` from its process, so naming the variable is
     # actionable. The hosted endpoint reads each request's own header and stores no key, so telling
     # a remote caller to set an environment variable names something it cannot reach — the one
     # direction an error must not fail in. `HttpApp` passes the hosted sentence; everything else
     # defaults to the stdio one.
     STDIO_CREDENTIAL_HINT =
-      "AGENTS_FYI_API_KEY is not set, so this tool cannot authenticate. " \
+      "AGENTS_API_KEY is not set, so this tool cannot authenticate. " \
       "Register an operator to obtain a key."
     HOSTED_CREDENTIAL_HINT =
       "no operator key was presented, so this tool cannot authenticate. " \

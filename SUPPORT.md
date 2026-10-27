@@ -10,7 +10,7 @@ tracker is the second.
 2. Read [Troubleshooting](docs/troubleshooting.md); it covers refusals, the stdio handshake and
    the hosted endpoint.
 3. Search the existing issues.
-4. Try the stdio server directly: `bin/agents-fyi-mcp` with `AGENTS_FYI_MCP_LOG=1` writes one
+4. Try the stdio server directly: `bin/agents-mcp` with `AGENTS_MCP_LOG=1` writes one
    structured line per protocol request.
 
 ## What to include

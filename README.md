@@ -1,14 +1,14 @@
-# agents-fyi MCP server
+# Agents MCP server
 
-`bin/agents-fyi-mcp` exposes the service as MCP tools, so a harness can use it without
+`bin/agents-mcp` exposes the service as MCP tools, so a harness can use it without
 hand-rolling HTTP. It is what most callers actually touch: the `SKILL.md` a harness
 installs is the same server explained to an agent as *when* to reach for a tool, and this
 file is the reference behind it.
 
 The protocol is the official Ruby SDK (`mcp` 1.8). The handshake, the tool list, the call,
 pagination, cancellation and both transports are the gem's; what is here is the surface —
-what a tool is called and what it says — and the behaviour behind it. `lib/agents_fyi_mcp/surface.rb`
-declares the thirty-two `MCP::Tool` subclasses, `lib/agents_fyi_mcp/tools/` implements what they do,
+what a tool is called and what it says — and the behaviour behind it. `lib/agents_mcp/surface.rb`
+declares the thirty-two `MCP::Tool` subclasses, `lib/agents_mcp/tools/` implements what they do,
 and `data/surface.json` is the frozen recording the declared surface is reconciled against
 (`test/mcp_tools_golden_test.rb`). The recording is no longer the bytes a client receives: a
 server that serves a recorded handshake is reproducing one answer to the protocol rather than
@@ -93,9 +93,9 @@ them and says which were new after all.
 
 ```bash
 # The client has its own bundle (`mcp`, `rack`, `puma`); the application's does not carry it.
-BUNDLE_PATH=~/.cache/agents-fyi-mcp/bundle bundle install   # once
-AGENTS_FYI_API_KEY=afy_… bin/agents-fyi-mcp                 # stdio transport
-                                       # or: ruby bin/agents-fyi-mcp
+BUNDLE_PATH=~/.cache/agents-mcp/bundle bundle install   # once
+AGENTS_API_KEY=afy_… bin/agents-mcp                 # stdio transport
+                                       # or: ruby bin/agents-mcp
                                        # (`./scripts/dev.sh mcp` runs the suite from the service checkout)
 ```
 
@@ -106,10 +106,10 @@ bundle exec ruby -Ilib -Itest test/all_test.rb
 ```
 
 The wrapper sets `BUNDLE_GEMFILE` to this repository's Gemfile and `BUNDLE_PATH` to
-`~/.cache/agents-fyi-mcp/bundle` (or `AGENTS_FYI_MCP_BUNDLE`), because two of the three callers —
+`~/.cache/agents-mcp/bundle` (or `AGENTS_MCP_BUNDLE`), because two of the three callers —
 the service checkout's `.mcp.json` and the generated `opencode` config — launch a command array
-with no shell, and a single script path is the one thing all three can name. `agents_fyi_mcp.rb`
-at this repository's root still exists and loads the wrapper: `/.well-known/agents-fyi.json`
+with no shell, and a single script path is the one thing all three can name. `agents_mcp.rb`
+at this repository's root still exists and loads the wrapper: `/.well-known/agents.json`
 names that path as this service's MCP server, and a documented command that stopped working
 would be a lie in the document whose job is to describe the surface.
 
@@ -120,7 +120,7 @@ CONTENT` markers, because report text is attacker-controllable and an agent that
 followed instructions found inside one would be the payload of a prompt-injection
 attack.
 The service checkout's `.mcp.json` registers it for harnesses that read that file, and the
-service's `.claude/skills/agents-fyi/SKILL.md` teaches an agent *when* to reach for it. This
+service's `.claude/skills/agents/SKILL.md` teaches an agent *when* to reach for it. This
 repository ships the same text as `data/SKILL.md`, so a harness that installs the client has the
 skill without needing the service checkout.
 
@@ -133,8 +133,8 @@ the opposite:
 - **`prompts/list`** carries `triage_a_failing_run` and `plan_an_upgrade` — the two workflows the
   instructions describe, laid out as steps. A prompt changes nothing; the tools it names still
   decide and still refuse.
-- **`resources/list`** carries `agents-fyi://discovery` and `agents-fyi://llms.txt` (fetched live
-  from the service), `agents-fyi://readme` and `agents-fyi://skill` (the files this component
+- **`resources/list`** carries `agents://discovery` and `agents://llms.txt` (fetched live
+  from the service), `agents://readme` and `agents://skill` (the files this component
   ships), and the template `report://{id}` for one report's whole body without a tool call.
 
 The version a client is offered is still the recording's: `tools`, `prompts` and `resources` with

@@ -30,7 +30,7 @@ both repositories live in the service's `test/contracts/mcp/` suite:
 - the service's `Gemfile.lock` carries no `mcp` gem;
 - the service's `.dockerignore` keeps all four clients out of the image;
 - `lib/mcp` is not a package;
-- `data/SKILL.md` is byte-identical to the service's canonical `.claude/skills/agents-fyi/SKILL.md`.
+- `data/SKILL.md` is byte-identical to the service's canonical `.claude/skills/agents/SKILL.md`.
 
 Do not copy the service's lockfile, `.dockerignore` or canonical skill into this repository. If
 a change needs both sides to test, add it to the service's contract suite.
@@ -38,8 +38,8 @@ a change needs both sides to test, add it to the service's contract suite.
 ## The image
 
 ```bash
-docker build -t agentsfyi-mcp .
-docker run --rm --entrypoint id agentsfyi-mcp -un   # expect mcp
+docker build -t agents-mcp .
+docker run --rm --entrypoint id agents-mcp -un   # expect mcp
 ```
 
 The image runs as uid `10004`, has no credential in its environment, and serves the hosted

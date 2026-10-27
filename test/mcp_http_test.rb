@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "test_helper"
-require_relative "../lib/agents_fyi_mcp/http_app"
+require_relative "../lib/agents_mcp/http_app"
 require "rack/mock"
 require "rack/mock_request"
 
@@ -17,7 +17,7 @@ class McpHttpTest < McpTest
   # the HTTP transport swapped, so a test cannot pass against a client the endpoint does not build.
   # `client_factory` is used by the one test that must see how a client was constructed.
   def app(transport: api.method(:transport), client_factory: nil)
-    AgentsFyiMcp::HttpApp.new(
+    AgentsMcp::HttpApp.new(
       hosts: %w[agents.shoutsid.fyi],
       origins: [],
       max_request_bytes: 64 * 1024,
@@ -47,7 +47,7 @@ class McpHttpTest < McpTest
     initialized = post(request, initialize_message)
     assert_equal 200, initialized.status
     body = JSON.parse(initialized.body)
-    assert_equal "agents-fyi", body.dig("result", "serverInfo", "name")
+    assert_equal "agents", body.dig("result", "serverInfo", "name")
     assert_equal "2025-11-25", body.dig("result", "protocolVersion")
 
     listed = post(request, { jsonrpc: "2.0", id: 2, method: "tools/list" })
@@ -63,7 +63,7 @@ class McpHttpTest < McpTest
     keys = []
     factory = lambda do |key|
       keys << key
-      AgentsFyiMcp::Client.new(base_url: McpTestSupport::BASE, api_key: key, transport: api.method(:transport))
+      AgentsMcp::Client.new(base_url: McpTestSupport::BASE, api_key: key, transport: api.method(:transport))
     end
     request = Rack::MockRequest.new(app(client_factory: factory))
 
@@ -80,7 +80,7 @@ class McpHttpTest < McpTest
   def test_a_write_without_a_key_names_the_header_this_caller_can_set
     # The credential is absent rather than wrong, and the tool is the thing that says so. The
     # sentence is the stdio server's rule with the hosted half swapped: a remote caller cannot set
-    # `AGENTS_FYI_API_KEY`, so a refusal naming it would send them to change something they do not
+    # `AGENTS_API_KEY`, so a refusal naming it would send them to change something they do not
     # have — the one direction an error must not fail in. The stdio server's own wording is asserted
     # in `mcp_transport_test.rb`, where the variable *is* the actionable thing.
     request = Rack::MockRequest.new(app)
@@ -97,7 +97,7 @@ class McpHttpTest < McpTest
     text = body.dig("result", "content", 0, "text").to_s
     assert_includes text, "X-API-Key"
     assert_includes text, "register an operator"
-    refute_includes text, "AGENTS_FYI_API_KEY"
+    refute_includes text, "AGENTS_API_KEY"
   end
 
   def test_an_origin_the_endpoint_did_not_allow_is_refused

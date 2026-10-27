@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module AgentsFyiMcp
+module AgentsMcp
   #
   # A report id or a symbol carrying either would reach a different path here than there,
   # which is the class of difference a port exists to remove.

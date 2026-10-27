@@ -47,7 +47,7 @@ image context to test, it belongs in the service's cross-repository contract sui
 The image:
 
 ```bash
-docker build -t agentsfyi-mcp .
+docker build -t agents-mcp .
 ```
 
 ## Design rules

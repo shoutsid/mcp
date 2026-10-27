@@ -68,23 +68,23 @@ class McpPromptsResourcesTest < McpTest
     listed = request(sdk_server, 1, "resources/list")
     uris = listed.dig("result", "resources").map { |resource| resource["uri"] }
 
-    assert_equal %w[agents-fyi://discovery agents-fyi://llms.txt agents-fyi://readme agents-fyi://skill],
+    assert_equal %w[agents://discovery agents://llms.txt agents://readme agents://skill],
       uris.sort
     assert_equal uris.length, uris.uniq.length
   end
 
   def test_the_discovery_resource_reads_the_live_document
     api.respond(McpTestSupport::SURFACE["initialize"])
-    reply = request(sdk_server, 1, "resources/read", { uri: "agents-fyi://discovery" })
+    reply = request(sdk_server, 1, "resources/read", { uri: "agents://discovery" })
 
     contents = reply.dig("result", "contents").first
-    assert_equal "agents-fyi://discovery", contents["uri"]
-    assert_includes contents["text"], "\"name\": \"agents-fyi\""
-    assert_equal "#{McpTestSupport::BASE}/.well-known/agents-fyi.json", api.calls.last.url
+    assert_equal "agents://discovery", contents["uri"]
+    assert_includes contents["text"], "\"name\": \"agents\""
+    assert_equal "#{McpTestSupport::BASE}/.well-known/agents.json", api.calls.last.url
   end
 
   def test_the_readme_resource_is_the_one_in_this_tree
-    reply = request(sdk_server, 1, "resources/read", { uri: "agents-fyi://readme" })
+    reply = request(sdk_server, 1, "resources/read", { uri: "agents://readme" })
 
     text = reply.dig("result", "contents", 0, "text")
     assert_includes text, "| Tool | Purpose |"
@@ -105,7 +105,7 @@ class McpPromptsResourcesTest < McpTest
     # `ToolError` carries is written for a caller, so it is returned as the resource's text rather
     # than raised into a generic internal error the model cannot act on.
     api.respond({ "error" => { "message" => "nope" } }, 500)
-    reply = request(sdk_server, 1, "resources/read", { uri: "agents-fyi://llms.txt" })
+    reply = request(sdk_server, 1, "resources/read", { uri: "agents://llms.txt" })
 
     text = reply.dig("result", "contents", 0, "text").to_s
     assert_includes text, "could not be read"

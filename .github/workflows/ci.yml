@@ -51,13 +51,13 @@ jobs:
           context: .
           file: ./Dockerfile
           load: true
-          tags: agentsfyi-mcp:ci
+          tags: agents-mcp:ci
           cache-from: type=gha,scope=mcp
           cache-to: type=gha,mode=max,scope=mcp
 
       - name: The image runs as a non-root user
         run: |
-          user="$(docker run --rm --entrypoint id agentsfyi-mcp:ci -un)"
+          user="$(docker run --rm --entrypoint id agents-mcp:ci -un)"
           [ "$user" = "mcp" ] || { echo "expected mcp, got $user"; exit 1; }
 
       - name: The hosted endpoint answers initialize and tools/list
@@ -65,7 +65,7 @@ jobs:
           # The service is not reachable, and does not need to be: the handshake and the tool list
           # are answered from the server. 127.0.0.1:9 is a closed port on purpose.
           container="$(docker run -d -p 127.0.0.1:18080:8080 \
-            -e AGENTS_FYI_URL=http://127.0.0.1:9 agentsfyi-mcp:ci)"
+            -e AGENTS_URL=http://127.0.0.1:9 agents-mcp:ci)"
           trap 'docker logs "$container"; docker rm -f "$container"' EXIT
 
           initialize='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}'
@@ -74,7 +74,7 @@ jobs:
               -H 'Content-Type: application/json' \
               -H 'Accept: application/json, text/event-stream' \
               -d "$initialize")"; then
-              echo "$reply" | grep -q '"name":"agents-fyi"' || {
+              echo "$reply" | grep -q '"name":"agents"' || {
                 echo "initialize did not name the server: $reply"; exit 1; }
               tools="$(curl -sf -X POST http://127.0.0.1:18080/ \
                 -H 'Content-Type: application/json' \

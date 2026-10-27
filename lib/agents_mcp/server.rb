@@ -8,7 +8,7 @@ require_relative "prompts"
 require_relative "resources"
 require_relative "surface"
 
-module AgentsFyiMcp
+module AgentsMcp
   # The MCP server, on the official Ruby SDK.
   #
   # The SDK owns the protocol: the handshake, the tool list, the call, pagination, cancellations,

@@ -2,7 +2,7 @@
 
 require "mcp"
 
-module AgentsFyiMcp
+module AgentsMcp
   # The workflow `Identity::INSTRUCTIONS` describes in prose, invocable as a prompt.
   #
   # The recording already advertised a `prompts` capability and answered nothing with it, which was

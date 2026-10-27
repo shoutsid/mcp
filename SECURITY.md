@@ -38,7 +38,7 @@ In scope:
 
 - **The operator key.** The hosted endpoint reads `X-API-Key` or `Authorization: Bearer` per
   request and stores nothing. A path that keeps, logs or shares a caller's key across requests is
-  a vulnerability. The stdio server reads `AGENTS_FYI_API_KEY` from its own environment; a path
+  a vulnerability. The stdio server reads `AGENTS_API_KEY` from its own environment; a path
   that writes it into a report, a log or a tool result is in scope.
 - **Credential isolation.** A server per request is what gives each caller their own credential.
   A shared server, a session store or a cached client that outlives the request is a regression.
@@ -52,7 +52,7 @@ In scope:
   sentence written for it. A refusal that becomes a crash, or a `ToolError` that leaks a secret,
   is in scope.
 - **Path and URL handling.** A tool argument must not make the client read a file it did not
-  name or send a request to a host other than `AGENTS_FYI_URL`.
+  name or send a request to a host other than `AGENTS_URL`.
 
 Out of scope:
 

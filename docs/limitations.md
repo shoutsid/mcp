@@ -10,7 +10,7 @@ These are deliberate.
   not an MCP logging surface.
 - **No accept, apply or verify tool.** A person accepts in the site admin or the project's
   portal. An agent that could accept its own proposal would make the operator's act a formality.
-- **Reads are anonymous; writes need a key.** A write without `AGENTS_FYI_API_KEY` (stdio) or a
+- **Reads are anonymous; writes need a key.** A write without `AGENTS_API_KEY` (stdio) or a
   request header (hosted) is refused with the sentence that names the thing that caller can set.
 - **The service is the authority.** A tool answers what the service answers. A 503, a paused
   collection or a refused proposal is reported as such, not retried into a different answer.

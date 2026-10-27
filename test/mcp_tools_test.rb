@@ -11,8 +11,8 @@ require_relative "test_helper"
 # trace. HTTP is stubbed, so none of this needs a running service.
 #
 class McpToolsTest < McpTest
-  BANNER = AgentsFyiMcp::Rendering::UNTRUSTED_BANNER
-  FOOTER = AgentsFyiMcp::Rendering::UNTRUSTED_FOOTER
+  BANNER = AgentsMcp::Rendering::UNTRUSTED_BANNER
+  FOOTER = AgentsMcp::Rendering::UNTRUSTED_FOOTER
 
   # Waking a tool: the recorded transport, and the answer the tool will read.
   def answer(payload, status = 200, headers = {})
@@ -556,13 +556,13 @@ class McpToolsTest < McpTest
   def test_a_write_without_a_key_refuses_before_making_a_request
     api.api_key = ""
 
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.record_outcome(
         { "report_id" => "44444444-4444-4444-8444-444444444444", "outcome" => "solved" }
       )
     end
 
-    assert_includes error.message, "AGENTS_FYI_API_KEY is not set"
+    assert_includes error.message, "AGENTS_API_KEY is not set"
     assert_empty api.calls, "it should not have reached the network"
   end
 
@@ -766,7 +766,7 @@ class McpToolsTest < McpTest
       409
     )
 
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.submit_report(
         { "title" => "A title", "library" => "httpx", "version" => "0.28.0", "problem" => "A problem" }
       )
@@ -778,7 +778,7 @@ class McpToolsTest < McpTest
   def test_a_plain_text_error_body_does_not_crash_the_error_path
     api.respond({ "detail" => [{ "msg" => "field required" }] }, 422)
 
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.get_report({ "report_id" => "55555555-5555-4555-8555-555555555555" })
     end
 
@@ -940,7 +940,7 @@ class McpToolsTest < McpTest
   end
 
   def test_find_rails_edits_refuses_a_file_argument_with_no_headers
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.find_rails_edits(
         { "from_version" => "3.2.22", "to_version" => "6.1.0", "files" => "class User < ActiveRecord::Base\n" }
       )
@@ -1063,13 +1063,13 @@ class McpToolsTest < McpTest
   def test_a_report_id_can_never_escape_its_own_path_segment
     api.respond({}, 404)
 
-    assert_raises(AgentsFyiMcp::ToolError) { api.tools.get_report({ "report_id" => "../operators/me" }) }
+    assert_raises(AgentsMcp::ToolError) { api.tools.get_report({ "report_id" => "../operators/me" }) }
 
     url = api.calls[0].url
     assert url.end_with?("/api/reports/..%2Foperators%2Fme")
     refute_includes url, "/api/operators/me"
 
-    assert_raises(AgentsFyiMcp::ToolError) do
+    assert_raises(AgentsMcp::ToolError) do
       api.tools.get_report({ "report_id" => "11111111-1111-4111-8111-111111111111?a=b" })
     end
 
@@ -1078,7 +1078,7 @@ class McpToolsTest < McpTest
 
   def test_every_tool_that_takes_an_id_encodes_it_the_same_way
     escaping = "../operators/me"
-    encoded = AgentsFyiMcp::Encoding.quote(escaping, safe: "")
+    encoded = AgentsMcp::Encoding.quote(escaping, safe: "")
 
     escapes = [
       -> { api.tools.get_report({ "report_id" => escaping }) },
@@ -1092,7 +1092,7 @@ class McpToolsTest < McpTest
 
     escapes.each do |call|
       api.respond({}, 404)
-      assert_raises(AgentsFyiMcp::ToolError, &call)
+      assert_raises(AgentsMcp::ToolError, &call)
     end
 
     assert_equal 7, api.calls.length
@@ -1124,7 +1124,7 @@ class McpToolsTest < McpTest
       422
     )
 
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.flag_report({ "report_id" => "11111111-1111-4111-8111-111111111111", "reason" => "spam" })
     end
 
@@ -1139,7 +1139,7 @@ class McpToolsTest < McpTest
       429, { "retry-after" => "60" }
     )
 
-    error = assert_raises(AgentsFyiMcp::ToolError) { api.tools.search_reports({ "query" => "timeout" }) }
+    error = assert_raises(AgentsMcp::ToolError) { api.tools.search_reports({ "query" => "timeout" }) }
 
     assert_includes error.message, "429"
     assert_includes error.message, "retry after 60s"
@@ -1151,7 +1151,7 @@ class McpToolsTest < McpTest
       429
     )
 
-    error = assert_raises(AgentsFyiMcp::ToolError) { api.tools.search_reports({ "query" => "timeout" }) }
+    error = assert_raises(AgentsMcp::ToolError) { api.tools.search_reports({ "query" => "timeout" }) }
 
     assert_includes error.message, "wait for the window to reset"
   end
@@ -1162,7 +1162,7 @@ class McpToolsTest < McpTest
       409, { "retry-after" => "60" }
     )
 
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.submit_report(
         { "title" => "A title", "library" => "httpx", "version" => "0.28.0", "problem" => "A problem" }
       )
@@ -1175,31 +1175,31 @@ class McpToolsTest < McpTest
 
   def test_a_response_that_is_not_the_shape_this_tool_reads_names_the_field
     api.respond({ "verdict" => "answered" })
-    error = assert_raises(AgentsFyiMcp::ToolError) { api.tools.find_answer({ "query" => "timeout" }) }
+    error = assert_raises(AgentsMcp::ToolError) { api.tools.find_answer({ "query" => "timeout" }) }
     assert_includes error.message, "`confidence`"
 
     body = an_upgrade_body
     body.delete("scanned")
     api.respond(body)
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.check_upgrade({ "library" => "mistralai", "from_version" => "1.9.11", "to_version" => "2.0.5" })
     end
     assert_includes error.message, "`scanned`"
 
     api.respond({ "items" => [] })
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.triage_failures({ "failures" => [{ "title" => "A failure" }] })
     end
     assert_includes error.message, "`summary`"
 
     api.respond({ "summary" => a_batch["summary"] })
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.submit_reports({ "findings" => [{ "title" => "A finding" }] })
     end
     assert_includes error.message, "`items`"
 
     api.respond({ "status" => "open" }, 201)
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.submit_report(
         { "title" => "A title", "library" => "httpx", "version" => "0.28.0", "problem" => "A problem" }
       )
@@ -1328,7 +1328,7 @@ class McpToolsTest < McpTest
   end
 
   def test_record_release_facts_refuses_an_empty_list
-    error = assert_raises(AgentsFyiMcp::ToolError) do
+    error = assert_raises(AgentsMcp::ToolError) do
       api.tools.record_release_facts({ "library" => "rake", "facts" => "   \n" })
     end
 

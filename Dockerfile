@@ -39,11 +39,11 @@ COPY data ./data
 COPY config.ru ./
 COPY README.md ./
 
-# A non-root account, and the whole tree is readable by it. `bin/agents-fyi-mcp` stays executable
+# A non-root account, and the whole tree is readable by it. `bin/agents-mcp` stays executable
 # because the same image runs the stdio server for a caller who wants it; `config.ru` is what the
 # default command serves.
 RUN useradd --system --uid 10004 --create-home mcp \
-    && chmod +x /app/bin/agents-fyi-mcp \
+    && chmod +x /app/bin/agents-mcp \
     && chown -R mcp:mcp /app
 USER mcp
 

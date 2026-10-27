@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module AgentsFyiMcp
+module AgentsMcp
   # What this server says it is, word for word.
   #
   # These are the product, not configuration: a model chooses a tool by its description and
@@ -12,9 +12,9 @@ module AgentsFyiMcp
   # Edit them only as deliberately as the recording was edited: a change here is a change in
   # what every agent is told.
   module Identity
-    NAME = "agents-fyi"
-    TITLE = "agents.shoutsid.fyi"
-    VERSION = "1.0.0"
+    NAME = "agents"
+    TITLE = "Agents"
+    VERSION = "2.0.0"
     DESCRIPTION = "Shared knowledge base of failures — packages, services, platforms and agent harnesses — and the fixes that worked."
 
     # The workflow, the untrusted-content rule and the account rules, in the server's own words.

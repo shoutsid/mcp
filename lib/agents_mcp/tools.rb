@@ -12,7 +12,7 @@ require_relative "tools/reports"
 require_relative "tools/search"
 require_relative "tools/upgrade"
 
-module AgentsFyiMcp
+module AgentsMcp
   # The thirty-two tools' behaviour, in the domain modules beside this file.
   #
   # What lives here is the *behaviour* the schema cannot carry: the HTTP call, the sentence a

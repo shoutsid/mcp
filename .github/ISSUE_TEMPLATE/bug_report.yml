@@ -37,7 +37,7 @@ body:
     attributes:
       label: Transport
       options:
-        - stdio (`bin/agents-fyi-mcp`)
+        - stdio (`bin/agents-mcp`)
         - hosted HTTP (`config.ru` / puma)
     validations:
       required: true

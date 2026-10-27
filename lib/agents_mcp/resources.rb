@@ -3,7 +3,7 @@
 require "json"
 require "mcp"
 
-module AgentsFyiMcp
+module AgentsMcp
   # The documents behind the tools, and one live report, as resources a client can read.
   #
   # The recording already advertised a `resources` capability and answered nothing with it. These
@@ -47,22 +47,22 @@ module AgentsFyiMcp
 
     # The machine-readable surface of the service the tools call.
     class Discovery < MCP::Resource
-      uri "agents-fyi://discovery"
+      uri "agents://discovery"
       resource_name "discovery"
       title "The service's discovery document"
-      description "`/.well-known/agents-fyi.json`: every route, enum, idempotency header and trace " \
+      description "`/.well-known/agents.json`: every route, enum, idempotency header and trace " \
                   "language the service declares, fetched live."
       mime_type "application/json"
 
       def self.contents(server_context:)
-        Resources.fetched(uri, server_context, "/.well-known/agents-fyi.json",
+        Resources.fetched(uri, server_context, "/.well-known/agents.json",
           mime_type: mime_type, json: true)
       end
     end
 
     # The plain-language document an agent is pointed at before it has a tool list.
     class Llms < MCP::Resource
-      uri "agents-fyi://llms.txt"
+      uri "agents://llms.txt"
       resource_name "llms_txt"
       title "llms.txt"
       description "The service's own introduction for a language model, fetched live."
@@ -75,7 +75,7 @@ module AgentsFyiMcp
 
     # The tool reference, from the component that ships it.
     class Readme < MCP::Resource
-      uri "agents-fyi://readme"
+      uri "agents://readme"
       resource_name "readme"
       title "The MCP server's README"
       description "The tool table, the annotation rules and the transport's contract."
@@ -87,12 +87,12 @@ module AgentsFyiMcp
     end
 
     # The skill, which is the README explained as *when* to reach for a tool. It ships as
-    # `data/SKILL.md`, a copy of `.claude/skills/agents-fyi/SKILL.md` held in step by a test,
+    # `data/SKILL.md`, a copy of `.claude/skills/agents/SKILL.md` held in step by a test,
     # because the image's build context is this component and the repository root is not in it.
     class Skill < MCP::Resource
-      uri "agents-fyi://skill"
+      uri "agents://skill"
       resource_name "skill"
-      title "The agents-fyi skill"
+      title "The agents skill"
       description "When to reach for each tool, and the rules for report text that is not yours."
       mime_type "text/markdown"
 

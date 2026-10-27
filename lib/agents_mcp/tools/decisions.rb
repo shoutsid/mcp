@@ -2,7 +2,7 @@
 
 require "json"
 
-module AgentsFyiMcp
+module AgentsMcp
   class Tools
     # **The decision tools: what a walk stopped on, and what an agent may say about it.**
     #
@@ -111,7 +111,7 @@ module AgentsFyiMcp
           "provenance" => args["provenance"].is_a?(Hash) ? args["provenance"] : {}
         }
         payload["option_key"] = args["option_key"] if args["option_key"]
-        payload["proposed_by"] = args["proposed_by"] || "model:agents-fyi-mcp"
+        payload["proposed_by"] = args["proposed_by"] || "model:agents-mcp"
 
         body = @client.request("POST", "#{decision_path(args['id'])}/answers",
           authenticated: true, json: payload)

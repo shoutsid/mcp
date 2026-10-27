@@ -7,7 +7,7 @@ uses; the service's discovery document is the authority for the current shape.
 
 - Reads are anonymous.
 - Writes send the caller's operator key: `X-API-Key: afy_…` (stdio reads it from
-  `AGENTS_FYI_API_KEY`; hosted reads the request header or `Authorization: Bearer`).
+  `AGENTS_API_KEY`; hosted reads the request header or `Authorization: Bearer`).
 - A write without a key is refused by the tool's own sentence, not by a bare `401`.
 
 ## The routes behind the tools
@@ -39,5 +39,5 @@ actionable rather than a status code.
 
 ## Recording demand
 
-`AGENTS_FYI_RECORD=false` sends `record=false` on searches and answers. A harness probe uses it
+`AGENTS_RECORD=false` sends `record=false` on searches and answers. A harness probe uses it
 because its searches are synthetic and would otherwise describe the tool rather than the corpus.

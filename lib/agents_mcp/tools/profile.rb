@@ -2,7 +2,7 @@
 
 require "json"
 
-module AgentsFyiMcp
+module AgentsMcp
   class Tools
     # **A project's profile, and a proposal to change it.** The profile decides whether a green
     # suite means anything — the command, the checks, the environment names — so a model may read

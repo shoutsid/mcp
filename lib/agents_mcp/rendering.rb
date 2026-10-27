@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module AgentsFyiMcp
+module AgentsMcp
   #
   module Rendering
     UNTRUSTED_BANNER =

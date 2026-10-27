@@ -53,8 +53,8 @@ class McpToolsGoldenTest < McpTest
 
   def test_every_declared_tool_has_a_handler_and_a_surface_class
     declared = McpTestSupport::SURFACE["tools"].map { |tool| tool["name"] }
-    handled = AgentsFyiMcp::Tools::HANDLERS.keys
-    surfaced = AgentsFyiMcp::Surface::ALL.map(&:tool_name)
+    handled = AgentsMcp::Tools::HANDLERS.keys
+    surfaced = AgentsMcp::Surface::ALL.map(&:tool_name)
 
     assert_equal declared.sort, handled.sort
     assert_equal declared.sort, surfaced.sort
@@ -65,7 +65,7 @@ class McpToolsGoldenTest < McpTest
     # The description is the whole basis on which a model picks a tool, and the schemas are what it
     # fills in and reads back. A missing one is a tool a model cannot use, and it is invisible from
     # the handler that works perfectly.
-    AgentsFyiMcp::Surface::ALL.each do |tool|
+    AgentsMcp::Surface::ALL.each do |tool|
       name = tool.tool_name
       refute_nil tool.title_value, name
       refute_empty tool.description_value.to_s, name
