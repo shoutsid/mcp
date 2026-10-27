@@ -15,11 +15,11 @@ gem "mcp", "~> 1.8"
 # Both are for the hosted endpoint in Phase 6: the SDK's Streamable HTTP transport is a
 # Rack application, and puma serves it. They are pinned here rather than added later so
 # the component keeps one lockfile.
-gem "puma", "~> 6.4"
+gem "puma", "~> 8.0"
 gem "rack", "~> 3.1"
 
 # The suite runs on this interpreter and needs no Rails, so minitest is the whole test
 # dependency. It is in the test group because the image installs without it.
 group :development, :test do
-  gem "minitest", "~> 5.25"
+  gem "minitest", "~> 6.0"
 end
