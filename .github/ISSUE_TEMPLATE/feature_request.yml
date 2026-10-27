@@ -1,0 +1,71 @@
+name: Feature request
+description: Propose a change to a tool, a transport, the documentation or the deployment shape.
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repository is proprietary. A feature request is a proposal, not a promise, and a
+        change that is accepted may require a separate written agreement with the copyright
+        holder. Please describe the problem before the solution.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that the server does not let you do today? Include the tool, the harness and the service route you expected.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: What should the server do instead? If it changes a tool, an annotation, a schema, a transport or an environment variable, say which.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What have you tried, and why is it not enough? A service route, a different tool or a harness-side change are all valid answers.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - a tool's behavior
+        - a tool's schema or annotations
+        - the stdio transport
+        - the hosted HTTP transport
+        - prompts and resources
+        - the skill and README tool tables
+        - the service API mapping
+        - configuration
+        - the container and its posture
+        - documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and compatibility
+      description: Would this change a tool name, a schema, an annotation, a refusal or an existing caller? Does it add a dependency or a credential?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the existing issues and the documentation.
+          required: true
+        - label: I have read CONTRIBUTING.md and understand this is a proprietary repository.
+          required: true

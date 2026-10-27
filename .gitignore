@@ -1,0 +1,16 @@
+# The bundle is installed outside the checkout by default; these are local fallbacks.
+.bundle/
+vendor/
+tmp/
+*.log
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/
+.direnv/

@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.12"
+          bundler-cache: true
+
+      - name: Check Ruby syntax
+        run: |
+          find . -name '*.rb' -not -path './.git/*' -print0 |
+            while IFS= read -r -d '' file; do
+              ruby -c "$file" > /dev/null || exit 1
+            done
+
+      - name: Run the suite
+        run: bundle exec ruby -Ilib -Itest test/all_test.rb
+
+  image:
+    name: Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: test
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Build the image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          load: true
+          tags: agentsfyi-mcp:ci
+          cache-from: type=gha,scope=mcp
+          cache-to: type=gha,mode=max,scope=mcp
+
+      - name: The image runs as a non-root user
+        run: |
+          user="$(docker run --rm --entrypoint id agentsfyi-mcp:ci -un)"
+          [ "$user" = "mcp" ] || { echo "expected mcp, got $user"; exit 1; }
+
+      - name: The hosted endpoint answers initialize and tools/list
+        run: |
+          # The service is not reachable, and does not need to be: the handshake and the tool list
+          # are answered from the server. 127.0.0.1:9 is a closed port on purpose.
+          container="$(docker run -d -p 127.0.0.1:18080:8080 \
+            -e AGENTS_FYI_URL=http://127.0.0.1:9 agentsfyi-mcp:ci)"
+          trap 'docker logs "$container"; docker rm -f "$container"' EXIT
+
+          initialize='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}'
+          for _ in $(seq 1 45); do
+            if reply="$(curl -sf -X POST http://127.0.0.1:18080/ \
+              -H 'Content-Type: application/json' \
+              -H 'Accept: application/json, text/event-stream' \
+              -d "$initialize")"; then
+              echo "$reply" | grep -q '"name":"agents-fyi"' || {
+                echo "initialize did not name the server: $reply"; exit 1; }
+              tools="$(curl -sf -X POST http://127.0.0.1:18080/ \
+                -H 'Content-Type: application/json' \
+                -H 'Accept: application/json, text/event-stream' \
+                -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}')"
+              echo "$tools" | grep -q '"name":"check_upgrade"' || {
+                echo "tools/list did not carry the surface: $tools"; exit 1; }
+              echo "the hosted endpoint answered"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "the hosted endpoint never answered"
+          exit 1

@@ -1,0 +1,20 @@
+# The client's own build context.
+#
+# The image carries the server and nothing it does not need at run time, so the suite, the
+# lockfile's install cache and anything a local run leaves behind stay out of the context rather
+# than being copied in and deleted again. `Gemfile.lock`, `Gemfile`, `bin/`, `lib/`, `data/`,
+# `config.ru` and `README.md` are the whole of what the Dockerfile copies.
+.git
+.github
+test/
+.bundle/
+vendor/
+tmp/
+*.gem
+*.log
+.env
+.env.*
+.DS_Store
+.idea
+.vscode
+.direnv

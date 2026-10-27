@@ -1,0 +1,98 @@
+name: Bug report
+description: Report a reproducible problem with the MCP server.
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem. Please search the existing issues and
+        read [Troubleshooting](https://github.com/shoutsid/mcp/blob/main/docs/troubleshooting.md)
+        first.
+
+        **Do not paste an operator key, a private report body or private source.** Redact the
+        request and the log before attaching them. Security reports go through
+        [SECURITY.md](https://github.com/shoutsid/mcp/blob/main/SECURITY.md), not this form.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The image tag, the commit, or the server's `initialize` version.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and Ruby
+      description: For example "Ubuntu 24.04, Ruby 3.3.12".
+      placeholder: "Ubuntu 24.04, Ruby 3.3.12"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - stdio (`bin/agents-fyi-mcp`)
+        - hosted HTTP (`config.ru` / puma)
+    validations:
+      required: true
+
+  - type: input
+    id: tool
+    attributes:
+      label: Tool or method
+      description: The tool name, or the protocol method (`initialize`, `tools/list`, a prompt or resource).
+      placeholder: "find_answer"
+    validations:
+      required: true
+
+  - type: textarea
+    id: request
+    attributes:
+      label: Request or command
+      description: The exact arguments or JSON-RPC request, with the service URL but no operator key.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: What should have happened, and why.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: The response, the status, the log line and whether it was a `ToolError` or a crash. Redact secrets and report bodies.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: The smallest request, report id or local server command that shows the problem.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the existing issues.
+          required: true
+        - label: I read the troubleshooting guide.
+          required: true
+        - label: I removed keys and private report bodies from this report.
+          required: true
