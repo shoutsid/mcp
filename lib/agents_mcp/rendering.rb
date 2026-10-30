@@ -189,6 +189,39 @@ module AgentsMcp
       "#{UNTRUSTED_BANNER}\n\n#{body}\n\n#{UNTRUSTED_FOOTER}"
     end
 
+    # **An executable claim, and what came back from it.** The two things a reader needs to decide
+    # whether to trust it are whether anybody ran it and what the probe saw: `runs: none` is a
+    # proposal, and a run whose verdict is `unreached` says the comparison never happened rather than
+    # that the claim failed.
+    def render_scenario(scenario)
+      lines = [
+        "scenario_id: #{scenario['id']}",
+        "subject: #{scenario['library']} #{scenario['from_version']} -> #{scenario['to_version']}"
+      ]
+      lines << "ecosystem: #{scenario['ecosystem']}" if scenario["ecosystem"]
+      probe = scenario["probe"]
+      if probe.is_a?(Hash)
+        expected = probe["expected"] ? " expecting #{py(probe['expected'])}" : ""
+        lines << "probe: #{probe['relation']}#{expected}"
+      end
+      lines << "environment_digest: #{scenario['environment_digest']}" if scenario["environment_digest"]
+
+      runs = Array(scenario["runs"])
+      if runs.empty?
+        lines << "runs: none — a proposal is not evidence; nobody has executed this"
+      else
+        lines << "runs: #{runs.length}"
+        runs.each_with_index do |run, index|
+          verdict = run["verdict"] ? " (#{run['verdict']})" : ""
+          lines << "  #{index + 1}. #{run['result']}#{verdict} by #{run['operator_id']} at #{run['created_at']}"
+          lines << "     detail: #{run['detail']}" if run["detail"]
+          lines << "     from: #{JSON.generate(run['from_output'])}" if run["from_output"]
+          lines << "     to: #{JSON.generate(run['to_output'])}" if run["to_output"]
+        end
+      end
+      lines.join("\n")
+    end
+
     # The caller's own name, when this change is the far side of it.
     #
     # A rename has two names and they sit on opposite sides of it: the corpus

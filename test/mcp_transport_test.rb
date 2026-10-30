@@ -32,6 +32,7 @@ class McpTransportTest < McpTest
     gem_migrations
     get_decision
     get_report
+    get_scenario
     list_decisions
     list_upgrade_targets
     plan_gem_moves
@@ -70,6 +71,7 @@ class McpTransportTest < McpTest
     gem_migrations
     get_decision
     get_report
+    get_scenario
     list_decisions
     list_upgrade_targets
     plan_gem_moves

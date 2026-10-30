@@ -107,6 +107,15 @@ module AgentsMcp
       Client.report_path(report_id, suffix)
     end
 
+    # The path for one scenario, encoded for the same reason `report_path` encodes its id.
+    def self.scenario_path(scenario_id)
+      "/api/scenarios/#{Encoding.quote(scenario_id, safe: '')}"
+    end
+
+    def scenario_path(scenario_id)
+      Client.scenario_path(scenario_id)
+    end
+
     private
 
     # One request, and the one place a failure is turned into a sentence.

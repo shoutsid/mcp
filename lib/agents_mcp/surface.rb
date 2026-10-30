@@ -268,6 +268,29 @@ module AgentsMcp
       annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
     end
 
+    # Read an executable claim and the runs recorded against it
+    class GetScenario < Base
+      tool_name "get_scenario"
+      title "Read an executable claim and the runs recorded against it"
+      description "Read one scenario: the two releases, the callable, the values it is called with and\n    the probe that decides whether the behaviour changed, plus every run recorded\n    against it.\n\n    Reach for this when a report says its claim is executable, or when you are deciding\n    whether to trust a claim enough to act on it. A scenario with no runs is a\n    proposal — nobody has executed it — and the answer says so rather than leaving an\n    empty list to interpret. A run reported as `unreached` could not install or call\n    one of the releases and counts for nothing: an install that failed is not a\n    refutation. The `verdict` beside each run is the service's reading of what the\n    probe saw on each side, not the runner's opinion.\n\n    There is deliberately no tool that proposes or runs a scenario here: those are\n    documented `POST /api/scenarios` and `POST /api/scenarios/{id}/runs` routes, and a\n    harness call is not an execution.\n\n    Args:\n        scenario_id: The scenario to read, from a report's `scenario` block.\n    "
+
+      input_schema(
+        { "properties" => { "scenario_id" => { "title" => "Scenario Id", "type" => "string" } },
+         "required" => ["scenario_id"],
+         "type" => "object",
+         "title" => "get_scenarioArguments" }
+      )
+
+      output_schema(
+        { "properties" => { "result" => { "title" => "Result", "type" => "string" } },
+         "required" => ["result"],
+         "type" => "object",
+         "title" => "get_scenarioOutput" }
+      )
+
+      annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
+    end
+
     # See which Rails applications this service is upgrading, and how each attempt went
     class ListUpgradeTargets < Base
       tool_name "list_upgrade_targets"
@@ -961,6 +984,6 @@ module AgentsMcp
 
     # In the recording's order, because a client that shows tools in the order it receives them
     # shows ours the way the recorded surface chose.
-    ALL = [CheckLockfileRubyCompatibility, CheckRubyCompatibility, CheckUpgrade, ClaimReport, FindAnswer, FindRailsEdits, FlagReport, GemMigrations, GetReport, ListUpgradeTargets, PlanGemMoves, PrecheckReport, ProposeResolution, RailsLadder, RailsUpgradePlan, RecordOutcome, RecordReleaseFacts, ReleaseReport, SearchReports, SubmitReport, SubmitReports, TriageFailures, VerifyReport, ListDecisions, GetDecision, ProposeDecision, CreateDecision, WithdrawDecision, ResolutionPlan, ScanUpgradeDelta, GetProjectProfile, ProposeProfile].freeze
+    ALL = [CheckLockfileRubyCompatibility, CheckRubyCompatibility, CheckUpgrade, ClaimReport, FindAnswer, FindRailsEdits, FlagReport, GemMigrations, GetReport, ListUpgradeTargets, PlanGemMoves, PrecheckReport, ProposeResolution, RailsLadder, RailsUpgradePlan, RecordOutcome, RecordReleaseFacts, ReleaseReport, SearchReports, SubmitReport, SubmitReports, TriageFailures, VerifyReport, ListDecisions, GetDecision, ProposeDecision, CreateDecision, WithdrawDecision, ResolutionPlan, ScanUpgradeDelta, GetProjectProfile, ProposeProfile, GetScenario].freeze
   end
 end

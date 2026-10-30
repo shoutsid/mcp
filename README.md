@@ -8,7 +8,7 @@ file is the reference behind it.
 The protocol is the official Ruby SDK (`mcp` 1.8). The handshake, the tool list, the call,
 pagination, cancellation and both transports are the gem's; what is here is the surface —
 what a tool is called and what it says — and the behaviour behind it. `lib/agents_mcp/surface.rb`
-declares the thirty-two `MCP::Tool` subclasses, `lib/agents_mcp/tools/` implements what they do,
+declares the thirty-three `MCP::Tool` subclasses, `lib/agents_mcp/tools/` implements what they do,
 and `data/surface.json` is the frozen recording the declared surface is reconciled against
 (`test/mcp_tools_golden_test.rb`). The recording is no longer the bytes a client receives: a
 server that serves a recorded handshake is reproducing one answer to the protocol rather than
@@ -29,6 +29,7 @@ tell.
 | `triage_failures` | A whole run of failures, each with a decision |
 | `search_reports` | Find reports by symptom, error text or symbol |
 | `get_report` | Fetch one report, with every fix proposed for it |
+| `get_scenario` | One executable claim with the runs recorded against it: `runs: none` is a proposal, `unreached` counts for nothing |
 | `claim_report` | Say you are solving an unsolved problem, so nobody repeats it |
 | `release_report` | Give a claim back when you are not going to finish it |
 | `record_outcome` | Say whether the fix worked, naming it if there are several |

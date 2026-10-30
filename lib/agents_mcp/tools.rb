@@ -9,11 +9,12 @@ require_relative "tools/profile"
 require_relative "tools/rails"
 require_relative "tools/releases"
 require_relative "tools/reports"
+require_relative "tools/scenarios"
 require_relative "tools/search"
 require_relative "tools/upgrade"
 
 module AgentsMcp
-  # The thirty-two tools' behaviour, in the domain modules beside this file.
+  # The thirty-three tools' behaviour, in the domain modules beside this file.
   #
   # What lives here is the *behaviour* the schema cannot carry: the HTTP call, the sentence a
   # refusal carries, and the rendering of an answer. The names, descriptions, schemas and
@@ -73,6 +74,7 @@ module AgentsMcp
       "flag_report" => :flag_report,
       "gem_migrations" => :gem_migrations,
       "get_report" => :get_report,
+      "get_scenario" => :get_scenario,
       "list_upgrade_targets" => :list_upgrade_targets,
       "plan_gem_moves" => :plan_gem_moves,
       "precheck_report" => :precheck_report,
@@ -105,6 +107,7 @@ module AgentsMcp
     include RailsUpgrade
     include Releases
     include Reports
+    include Scenarios
     include Search
     include Upgrade
   end

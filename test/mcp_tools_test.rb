@@ -641,6 +641,57 @@ class McpToolsTest < McpTest
     assert_includes out, 'resolution_id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"'
   end
 
+  # A proposal is not evidence, and the render says so rather than leaving an empty list for a model
+  # to read as "executed successfully".
+  def test_get_scenario_says_a_proposal_has_no_runs
+    body = {
+      "id" => "33333333-3333-4333-8333-333333333333", "ecosystem" => "python",
+      "library" => "httpx", "from_version" => "0.27.0", "to_version" => "0.28.0",
+      "probe" => { "relation" => "raises_class", "expected" => "TypeError" },
+      "environment_digest" => "4f1c0a2b3c4d", "runs" => []
+    }
+    out = answer(body).get_scenario({ "scenario_id" => body["id"] })
+
+    assert_includes out, "subject: httpx 0.27.0 -> 0.28.0"
+    assert_includes out, "probe: raises_class expecting TypeError"
+    assert_includes out, "runs: none"
+    assert_includes out, BANNER
+    assert api.calls[0].path.end_with?("/api/scenarios/#{body['id']}")
+  end
+
+  # `unreached` is the answer that keeps a failed install from reading as a refutation, so the run's
+  # own state travels with it rather than being flattened into "did not reproduce".
+  def test_get_scenario_shows_a_run_that_never_reached_the_release
+    body = {
+      "id" => "33333333-3333-4333-8333-333333333333", "ecosystem" => "python",
+      "library" => "httpx", "from_version" => "0.27.0", "to_version" => "0.28.0",
+      "probe" => { "relation" => "raises_class", "expected" => "TypeError" }, "runs" => [
+        {
+          "id" => "44444444-4444-4444-8444-444444444444",
+          "operator_id" => "22222222-2222-4222-8222-222222222222",
+          "result" => "unreached", "verdict" => nil,
+          "detail" => "pip could not install 0.27.0 in 120s",
+          "created_at" => "2026-10-30T10:00:00Z"
+        },
+        {
+          "id" => "55555555-5555-4555-8555-555555555555",
+          "operator_id" => "66666666-6666-4666-8666-666666666666",
+          "result" => "reached", "verdict" => "changed",
+          "from_output" => { "returned" => "ok" }, "to_output" => { "raised" => "TypeError" },
+          "created_at" => "2026-10-30T11:00:00Z"
+        }
+      ]
+    }
+
+    out = answer(body).get_scenario({ "scenario_id" => body["id"] })
+
+    assert_includes out, "runs: 2"
+    assert_includes out, "unreached by 22222222-2222-4222-8222-222222222222"
+    assert_includes out, "pip could not install 0.27.0 in 120s"
+    assert_includes out, "reached (changed)"
+    assert_includes out, '{"raised":"TypeError"}'
+  end
+
   def test_a_run_of_fixes_is_offered_with_what_each_has_earned
     body = {
       "verdict" => "answered", "confidence" => "low",

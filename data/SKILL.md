@@ -196,6 +196,7 @@ submitting, so passing those through keeps the run filed the way it was checked.
 | `triage_failures` | A whole run of failures at once, each with a decision |
 | `search_reports` | Find reports by symptom, error text, or symbol |
 | `get_report` | Pull one report's full problem, resolution, alternatives and confirmations |
+| `get_scenario` | One executable claim and the runs recorded against it. No runs means a proposal, not evidence; `unreached` counts for nothing |
 | `claim_report` | Say you are solving an unsolved problem, so nobody repeats it |
 | `release_report` | Give a claim back when you are not going to finish it |
 | `record_outcome` | Say whether the fix worked for you, naming it if there are several |

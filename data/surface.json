@@ -2231,6 +2231,42 @@
         "openWorldHint": true,
         "readOnlyHint": false
       }
+    },
+    {
+      "name": "get_scenario",
+      "title": "Read an executable claim and the runs recorded against it",
+      "description": "Read one scenario: the two releases, the callable, the values it is called with and\n    the probe that decides whether the behaviour changed, plus every run recorded\n    against it.\n\n    Reach for this when a report says its claim is executable, or when you are deciding\n    whether to trust a claim enough to act on it. A scenario with no runs is a\n    proposal — nobody has executed it — and the answer says so rather than leaving an\n    empty list to interpret. A run reported as `unreached` could not install or call\n    one of the releases and counts for nothing: an install that failed is not a\n    refutation. The `verdict` beside each run is the service's reading of what the\n    probe saw on each side, not the runner's opinion.\n\n    There is deliberately no tool that proposes or runs a scenario here: those are\n    documented `POST /api/scenarios` and `POST /api/scenarios/{id}/runs` routes, and a\n    harness call is not an execution.\n\n    Args:\n        scenario_id: The scenario to read, from a report's `scenario` block.\n    ",
+      "inputSchema": {
+        "properties": {
+          "scenario_id": {
+            "title": "Scenario Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_id"
+        ],
+        "type": "object",
+        "title": "get_scenarioArguments"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "title": "get_scenarioOutput"
+      },
+      "annotations": {
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      }
     }
   ],
   "call": {
