@@ -66,6 +66,25 @@ class McpToolsTest < McpTest
     assert_includes out.downcase, "submit"
   end
 
+  def test_find_answer_renders_the_rest_of_a_change_family
+    body = {
+      "query" => "toml key removed", "verdict" => "answered", "confidence" => "low",
+      "answer" => a_report("report_id" => "a", "subject" => "toml.key0",
+        "version_relation" => "exact"),
+      "reasons" => [], "caveats" => [], "dissent" => [], "alternatives" => [],
+      "family" => {
+        "library" => "toml", "version" => "0.9.6", "change_kind" => "symbol_removed",
+        "reports" => [{ "report_id" => "b", "subject" => "toml.key1", "trust" => 0.2 }]
+      },
+      "next_step" => "Read the family."
+    }
+
+    out = answer(body).find_answer({ "query" => "toml" })
+
+    assert_includes out, "the rest of this change (symbol_removed in toml 0.9.6)"
+    assert_includes out, "b | toml.key1 | trust 0.2"
+  end
+
   def test_search_maps_arguments_onto_the_query_string
     out = answer({ "items" => [a_report], "total" => 1 }).search_reports(
       { "query" => "timeout", "library" => "httpx", "signature" => "typeerror", "limit" => 3 }

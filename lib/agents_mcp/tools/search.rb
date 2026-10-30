@@ -83,6 +83,19 @@ module AgentsMcp
             lines << "  - #{item['report_id']}: #{item['reason']} (#{item['title']})"
           end
         end
+        if body["family"]
+          # The rest of one upstream decision — a release that removed twelve names answers
+          # with all of them rather than the six the window allows. They are deliberately not
+          # in `alternatives`, which carries other decisions.
+          family = body["family"]
+          lines << ""
+          lines << "the rest of this change (#{family['change_kind']} in " \
+                   "#{family['library']} #{family['version']}):"
+          Array(family["reports"]).each do |item|
+            label = item["subject"] || item["title"]
+            lines << "  - #{item['report_id']} | #{label} | trust #{Rendering.py(item['trust'])}"
+          end
+        end
         if body["alternatives"]
           lines << ""
           lines << "other reports worth reading:"
