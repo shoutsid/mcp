@@ -147,6 +147,20 @@ module AgentsMcp
         end
         "Recorded #{recorded} release(s) of #{args['library']} in #{requests} request(s)."
       end
+
+      # `get_release`: one release's changes, grouped by the change rather than by the report.
+      #
+      # This is the read that answers "what changed at 7.1" without a search for the version string
+      # and a read of every hit: three reports about one renamed method come back as one change with
+      # three witnesses, and an empty answer says whether the library is unknown to this corpus or
+      # merely recorded at other versions.
+      def get_release(args)
+        body = @client.request("GET", @client.release_path(args["ecosystem"], args["library"],
+          args["version"]))
+        # Wrapped like every read that hands a model report titles: the change keys are the corpus's,
+        # the titles inside them were written by whoever filed the report.
+        Rendering.wrap(Rendering.render_release(body))
+      end
     end
   end
 end

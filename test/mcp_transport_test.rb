@@ -31,6 +31,7 @@ class McpTransportTest < McpTest
     flag_report
     gem_migrations
     get_decision
+    get_release
     get_report
     get_scenario
     list_decisions
@@ -70,6 +71,7 @@ class McpTransportTest < McpTest
     get_project_profile
     gem_migrations
     get_decision
+    get_release
     get_report
     get_scenario
     list_decisions

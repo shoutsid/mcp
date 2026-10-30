@@ -116,6 +116,17 @@ module AgentsMcp
       Client.scenario_path(scenario_id)
     end
 
+    # Three segments, each encoded separately: a version is `5.1.0` and must stay one segment, and a
+    # library name with a slash in it must not become two.
+    def self.release_path(ecosystem, library, version)
+      segments = [ecosystem, library, version].map { |value| Encoding.quote(value.to_s, safe: '') }
+      "/api/releases/#{segments.join('/')}"
+    end
+
+    def release_path(ecosystem, library, version)
+      Client.release_path(ecosystem, library, version)
+    end
+
     private
 
     # One request, and the one place a failure is turned into a sentence.

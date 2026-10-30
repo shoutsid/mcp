@@ -222,6 +222,33 @@ module AgentsMcp
       lines.join("\n")
     end
 
+    # **What one release changed, grouped by the change rather than by the report.** A group's
+    # `report_count` is how many voices witnessed one change; reading the reports as a list and
+    # counting rows is exactly the mistake this read exists to fix.
+    def render_release(release)
+      lines = [
+        "release: #{release['library']} #{release['version']} (#{release['ecosystem']})",
+        "changes: #{py(release['change_count'])} across #{py(release['report_count'])} report(s)"
+      ]
+      changes = Array(release["changes"])
+      if changes.empty?
+        lines << "note: #{release['note']}" if release["note"]
+        lines << "near misses: #{Array(release['near_misses']).join(', ')}" if release["near_misses"]
+        lines << "versions held: #{Array(release['versions']).join(', ')}" if release["versions"]
+      else
+        changes.each_with_index do |change, index|
+          subject = change["subject"] || change["change_key"] || "(no subject named)"
+          renamed = change["replacement"] ? " -> #{change['replacement']}" : ""
+          kind = change["change_kind"] ? " (#{change['change_kind']})" : ""
+          lines << "  #{index + 1}. #{subject}#{renamed}#{kind}, #{py(change['report_count'])} report(s)"
+          Array(change["reports"]).each do |report|
+            lines << "     #{report['id']} [#{report['status']}] #{report['title']}"
+          end
+        end
+      end
+      lines.join("\n")
+    end
+
     # The caller's own name, when this change is the far side of it.
     #
     # A rename has two names and they sit on opposite sides of it: the corpus

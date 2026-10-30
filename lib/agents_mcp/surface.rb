@@ -268,6 +268,32 @@ module AgentsMcp
       annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
     end
 
+    # Read what one release changed, grouped by the change
+    class GetRelease < Base
+      tool_name "get_release"
+      title "Read what one release changed, grouped by the change"
+      description "What one release changed, from the reports that witnessed it, grouped by the change\n    rather than by the report.\n\n    Reach for this when you know the library and the release and want the list of things\n    that moved in it — three reports about one renamed method are one change with three\n    witnesses, and a search for the version string answers with the three rows instead.\n    The grouping key is the one the corpus joins documented changes on, so a change here\n    is the same change `check_upgrade` and `rails_upgrade_plan` name.\n\n    An empty answer says which empty it is: a library this corpus does not hold (with the\n    spellings it does hold, because an import name is often not the distribution name), or\n    one it holds at other versions, which it lists. Read the note rather than assuming\n    nothing changed.\n\n    Args:\n        ecosystem: The package index: `python` (PyPI) or `ruby` (RubyGems).\n        library: The library, as the corpus files it — the distribution name.\n        version: The release to read, e.g. `0.28.0` or `7.1.0.rc1`.\n    "
+
+      input_schema(
+        { "properties" =>
+          { "ecosystem" => { "title" => "Ecosystem", "type" => "string" },
+           "library" => { "title" => "Library", "type" => "string" },
+           "version" => { "title" => "Version", "type" => "string" } },
+         "required" => %w[ecosystem library version],
+         "type" => "object",
+         "title" => "get_releaseArguments" }
+      )
+
+      output_schema(
+        { "properties" => { "result" => { "title" => "Result", "type" => "string" } },
+         "required" => ["result"],
+         "type" => "object",
+         "title" => "get_releaseOutput" }
+      )
+
+      annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
+    end
+
     # Read an executable claim and the runs recorded against it
     class GetScenario < Base
       tool_name "get_scenario"
@@ -984,6 +1010,6 @@ module AgentsMcp
 
     # In the recording's order, because a client that shows tools in the order it receives them
     # shows ours the way the recorded surface chose.
-    ALL = [CheckLockfileRubyCompatibility, CheckRubyCompatibility, CheckUpgrade, ClaimReport, FindAnswer, FindRailsEdits, FlagReport, GemMigrations, GetReport, ListUpgradeTargets, PlanGemMoves, PrecheckReport, ProposeResolution, RailsLadder, RailsUpgradePlan, RecordOutcome, RecordReleaseFacts, ReleaseReport, SearchReports, SubmitReport, SubmitReports, TriageFailures, VerifyReport, ListDecisions, GetDecision, ProposeDecision, CreateDecision, WithdrawDecision, ResolutionPlan, ScanUpgradeDelta, GetProjectProfile, ProposeProfile, GetScenario].freeze
+    ALL = [CheckLockfileRubyCompatibility, CheckRubyCompatibility, CheckUpgrade, ClaimReport, FindAnswer, FindRailsEdits, FlagReport, GemMigrations, GetReport, ListUpgradeTargets, PlanGemMoves, PrecheckReport, ProposeResolution, RailsLadder, RailsUpgradePlan, RecordOutcome, RecordReleaseFacts, ReleaseReport, SearchReports, SubmitReport, SubmitReports, TriageFailures, VerifyReport, ListDecisions, GetDecision, ProposeDecision, CreateDecision, WithdrawDecision, ResolutionPlan, ScanUpgradeDelta, GetProjectProfile, ProposeProfile, GetScenario, GetRelease].freeze
   end
 end

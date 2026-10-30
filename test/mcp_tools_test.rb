@@ -641,6 +641,59 @@ class McpToolsTest < McpTest
     assert_includes out, 'resolution_id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"'
   end
 
+  # A change with two witnesses is one change: the render counts voices inside the group rather than
+  # handing a model two rows and letting it count rows.
+  def test_get_release_groups_reports_under_the_change_they_witness
+    body = {
+      "ecosystem" => "ruby", "library" => "actionpack", "version" => "5.1.0",
+      "change_count" => 1, "report_count" => 2,
+      "changes" => [
+        {
+          "change_key" => "ruby|actionpack|before_filter", "subject" => "before_filter",
+          "change_kind" => "symbol_renamed", "replacement" => "before_action",
+          "report_count" => 2,
+          "reports" => [
+            { "id" => "77777777-7777-4777-8777-777777777777", "status" => "resolved_verified",
+              "title" => "`before_filter` was removed", "created_at" => "2026-09-23T00:00:00Z" },
+            { "id" => "88888888-8888-4888-8888-888888888888", "status" => "open",
+              "title" => "The callback still runs", "created_at" => "2026-09-24T00:00:00Z" }
+          ]
+        }
+      ]
+    }
+
+    out = answer(body).get_release(
+      { "ecosystem" => "ruby", "library" => "actionpack", "version" => "5.1.0" }
+    )
+
+    assert api.calls[0].path.end_with?("/api/releases/ruby/actionpack/5.1.0")
+    assert_includes out, "release: actionpack 5.1.0 (ruby)"
+    assert_includes out, "changes: 1 across 2 report(s)"
+    assert_includes out, "1. before_filter -> before_action (symbol_renamed), 2 report(s)"
+    assert_includes out, "77777777-7777-4777-8777-777777777777 [resolved_verified]"
+    assert_includes out, BANNER
+  end
+
+  # An empty page is not "nothing changed": the note says whether the name is unknown or the release
+  # simply has nothing recorded against it.
+  def test_get_release_explains_an_empty_answer
+    body = {
+      "ecosystem" => "python", "library" => "boolean", "version" => "4.0",
+      "change_count" => 0, "report_count" => 0, "changes" => [],
+      "library_known" => false,
+      "note" => "No report in this deployment is filed under `boolean`.",
+      "near_misses" => ["boolean-py"]
+    }
+
+    out = answer(body).get_release(
+      { "ecosystem" => "python", "library" => "boolean", "version" => "4.0" }
+    )
+
+    assert_includes out, "changes: 0"
+    assert_includes out, "No report in this deployment is filed under `boolean`."
+    assert_includes out, "near misses: boolean-py"
+  end
+
   # A proposal is not evidence, and the render says so rather than leaving an empty list for a model
   # to read as "executed successfully".
   def test_get_scenario_says_a_proposal_has_no_runs
