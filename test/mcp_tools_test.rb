@@ -641,6 +641,28 @@ class McpToolsTest < McpTest
     assert_includes out, 'resolution_id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"'
   end
 
+  # The edge is the point of recording it: a model reading the weaker half has to be told which report
+  # stands in for it, or it acts on the row that says "nothing replaced it".
+  def test_get_report_names_the_report_that_supersedes_it
+    report = a_report(
+      "relations" => {
+        "supersedes" => [],
+        "superseded_by" => [
+          { "report_id" => "99999999-9999-4999-8999-999999999999",
+            "title" => "libx renamed old_name to new_name",
+            "status" => "resolved_verified",
+            "note" => "the same subject is named with a destination" }
+        ],
+        "contradicts" => []
+      }
+    )
+
+    out = answer(report).get_report({ "report_id" => "11111111-1111-4111-8111-111111111111" })
+
+    assert_includes out, "superseded by: 99999999-9999-4999-8999-999999999999 " \
+                         "libx renamed old_name to new_name [resolved_verified]"
+  end
+
   # A change with two witnesses is one change: the render counts voices inside the group rather than
   # handing a model two rows and letting it count rows.
   def test_get_release_groups_reports_under_the_change_they_witness

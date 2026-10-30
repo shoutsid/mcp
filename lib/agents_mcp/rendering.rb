@@ -139,6 +139,20 @@ module AgentsMcp
           )
         end
       end
+      # **Which report stands in for this one.** Two reports can describe one change, and the
+      # corpus records which is the fuller record rather than deleting the other; a model that only
+      # saw the row would read the weaker one as the answer. Absence is silence here: a report with
+      # no edge says nothing, because most have none.
+      relations = report["relations"]
+      if relations.is_a?(Hash)
+        Array(relations["superseded_by"]).each do |edge|
+          lines << "superseded by: #{edge['report_id']} #{edge['title']}" \
+                   "#{edge['status'] ? " [#{edge['status']}]" : ''}"
+        end
+        Array(relations["contradicts"]).each do |edge|
+          lines << "contradicted by: #{edge['report_id']} #{edge['title']}"
+        end
+      end
       verifications = report["verifications"] || []
       unless verifications.empty?
         # The evidence behind the status, not only the fact of it. An agent
