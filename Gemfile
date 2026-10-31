@@ -5,8 +5,8 @@
 # **It is a bundle of its own because the component is a client.** `mcp` is the SDK the
 # server is built on, and the service's image deliberately installs without `development
 # test` and ships no MCP surface: an SDK in the container that answers the internet is a
-# dependency nothing in the application loads, and a client is not part of the service
-# (`docs/refactor/adr/0003-components-are-the-module-root.md`). The root `Gemfile.lock`
+# dependency nothing in the application loads, and a client is not part of the service.
+# The root `Gemfile.lock`
 # is asserted to carry no `mcp` gem, so adding one there fails the suite rather than
 # quietly coupling the two.
 source "https://rubygems.org"
