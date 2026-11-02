@@ -589,6 +589,34 @@ module AgentsMcp
       annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
     end
 
+    # Find reports waiting for a confirmation
+    class ListUnverifiedReports < Base
+      tool_name "list_unverified_reports"
+      title "Find reports waiting for a confirmation"
+      description "Find the reports this corpus is waiting on somebody to confirm.\n\n    A report becomes evidence every caller can rely on only when enough vouched\n    operators have reproduced it, and reading it does not produce a confirmation —\n    so a fix can sit unconfirmed indefinitely. Reach for this when `find_answer`\n    came back `known_unfixed` and you have solved the problem, or when you have\n    reproduced a failure somebody recorded and can say so: `verify_report` with\n    `outcome: reproduced` is the write that moves the report up the ladder.\n\n    Read `trusted_confirmations` against `confirmations_required` to see the gap.\n    `confirmations` counts every distinct voice that reproduced the problem; a\n    confirmation from an account no site administrator has vouched for is\n    recorded and counted but moves no status, so a report can be well confirmed\n    and still unverified. The queue is oldest first, because that is which report\n    has waited longest for the voice it needs.\n\n    Args:\n        ecosystem: Restrict the queue to one package index — `python` (PyPI) or\n            `ruby` (RubyGems).\n        library: Restrict the queue to one library or tool, as the corpus files\n            it — the distribution name rather than the import name.\n        limit: Maximum reports to return (1-100).\n        offset: How many to skip, for paging (0-1000).\n    "
+
+      input_schema(
+        { "properties" =>
+          { "ecosystem" =>
+            { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Ecosystem" },
+           "library" =>
+            { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Library" },
+           "limit" => { "default" => 25, "title" => "Limit", "type" => "integer" },
+           "offset" => { "default" => 0, "title" => "Offset", "type" => "integer" } },
+         "type" => "object",
+         "title" => "list_unverified_reportsArguments" }
+      )
+
+      output_schema(
+        { "properties" => { "result" => { "title" => "Result", "type" => "string" } },
+         "required" => ["result"],
+         "type" => "object",
+         "title" => "list_unverified_reportsOutput" }
+      )
+
+      annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
+    end
+
     # Contribute a finding
     class SubmitReport < Base
       tool_name "submit_report"
@@ -1010,6 +1038,6 @@ module AgentsMcp
 
     # In the recording's order, because a client that shows tools in the order it receives them
     # shows ours the way the recorded surface chose.
-    ALL = [CheckLockfileRubyCompatibility, CheckRubyCompatibility, CheckUpgrade, ClaimReport, FindAnswer, FindRailsEdits, FlagReport, GemMigrations, GetReport, ListUpgradeTargets, PlanGemMoves, PrecheckReport, ProposeResolution, RailsLadder, RailsUpgradePlan, RecordOutcome, RecordReleaseFacts, ReleaseReport, SearchReports, SubmitReport, SubmitReports, TriageFailures, VerifyReport, ListDecisions, GetDecision, ProposeDecision, CreateDecision, WithdrawDecision, ResolutionPlan, ScanUpgradeDelta, GetProjectProfile, ProposeProfile, GetScenario, GetRelease].freeze
+    ALL = [CheckLockfileRubyCompatibility, CheckRubyCompatibility, CheckUpgrade, ClaimReport, FindAnswer, FindRailsEdits, FlagReport, GemMigrations, GetReport, ListUpgradeTargets, PlanGemMoves, PrecheckReport, ProposeResolution, RailsLadder, RailsUpgradePlan, RecordOutcome, RecordReleaseFacts, ReleaseReport, SearchReports, ListUnverifiedReports, SubmitReport, SubmitReports, TriageFailures, VerifyReport, ListDecisions, GetDecision, ProposeDecision, CreateDecision, WithdrawDecision, ResolutionPlan, ScanUpgradeDelta, GetProjectProfile, ProposeProfile, GetScenario, GetRelease].freeze
   end
 end

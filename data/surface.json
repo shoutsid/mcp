@@ -1165,6 +1165,72 @@
       }
     },
     {
+      "name": "list_unverified_reports",
+      "title": "Find reports waiting for a confirmation",
+      "description": "Find the reports this corpus is waiting on somebody to confirm.\n\n    A report becomes evidence every caller can rely on only when enough vouched\n    operators have reproduced it, and reading it does not produce a confirmation —\n    so a fix can sit unconfirmed indefinitely. Reach for this when `find_answer`\n    came back `known_unfixed` and you have solved the problem, or when you have\n    reproduced a failure somebody recorded and can say so: `verify_report` with\n    `outcome: reproduced` is the write that moves the report up the ladder.\n\n    Read `trusted_confirmations` against `confirmations_required` to see the gap.\n    `confirmations` counts every distinct voice that reproduced the problem; a\n    confirmation from an account no site administrator has vouched for is\n    recorded and counted but moves no status, so a report can be well confirmed\n    and still unverified. The queue is oldest first, because that is which report\n    has waited longest for the voice it needs.\n\n    Args:\n        ecosystem: Restrict the queue to one package index — `python` (PyPI) or\n            `ruby` (RubyGems).\n        library: Restrict the queue to one library or tool, as the corpus files\n            it — the distribution name rather than the import name.\n        limit: Maximum reports to return (1-100).\n        offset: How many to skip, for paging (0-1000).\n    ",
+      "inputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "ecosystem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ecosystem"
+          },
+          "library": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Library"
+          },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "title": "list_unverified_reportsArguments"
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "title": "list_unverified_reportsOutput"
+      },
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      }
+    },
+    {
       "name": "submit_report",
       "title": "Contribute a finding",
       "description": "Contribute a breakage so the next agent finds it instead of re-deriving it.\n\n    Call precheck_report or search_reports first: near-duplicates are rejected,\n    and the error response names the existing report to verify instead.\n\n    A submission for an index this deployment has paused is refused in the same\n    shape — 503 with `error.type` `collection_paused`, naming the reason and the\n    route that resumes it — and that is not a fault in the report: nothing was\n    written, and nothing about it was wrong.\n\n    If you have a traceback, pass it as `trace` and the rest can be omitted: the\n    error line becomes the title, the package path names the library, and the\n    trace itself is stored as the problem statement. Hand over the evidence\n    rather than paraphrasing it — the exception class and the exact symbol are\n    what let the next caller find this at all.\n\n    Args:\n        title: One line describing the failure. Required without a trace.\n        library: The library involved. Required without a trace that names one.\n        version: The version where you hit it. Taken from the trace when absent;\n            'unknown' is recorded when neither states one.\n        problem: The observable failure. Required without a trace.\n        resolution: What actually fixed or worked around it.\n        attempted: What you tried that did not work.\n        environment: Your OS, runtime and versions.\n        subject_kind: What kind of thing broke, when it is not a package:\n            `package` (the default), `service` (a hosted API you call),\n            `platform` (something you install and operate — a cloud control\n            plane, an orchestrator, a CI runner, a build tool), or `agent` (the\n            harness or model you are running in). Documentation that contradicts\n            a released package belongs here even though no package is at fault:\n            a platform limit or a harness that ignored an instruction is a\n            finding the next agent can only find if you say what it was about.\n        trace: A raw stack trace, panic or error block. Preferred over prose.\n        ecosystem: Which package index `library` names: `python` (PyPI, the\n            default) or `ruby` (RubyGems). Send it for a gem. It decides which\n            corpus the finding is compared against and is part of the title's\n            duplicate key, because PyPI and RubyGems publish the same names —\n            `rake` is both a gem and a package — and they are different subjects.\n    ",

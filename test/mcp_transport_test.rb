@@ -35,6 +35,7 @@ class McpTransportTest < McpTest
     get_report
     get_scenario
     list_decisions
+    list_unverified_reports
     list_upgrade_targets
     plan_gem_moves
     precheck_report
@@ -75,6 +76,7 @@ class McpTransportTest < McpTest
     get_report
     get_scenario
     list_decisions
+    list_unverified_reports
     list_upgrade_targets
     plan_gem_moves
     precheck_report

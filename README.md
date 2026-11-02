@@ -28,6 +28,7 @@ tell.
 | `precheck_report` | Ask whether a draft is already recorded, before filing it |
 | `triage_failures` | A whole run of failures, each with a decision |
 | `search_reports` | Find reports by symptom, error text or symbol |
+| `list_unverified_reports` | The reports waiting for a confirmation, oldest first: `trusted_confirmations` against `confirmations_required`, because a confirmation only promotes from a vouched account |
 | `get_release` | What one release changed, grouped by the change: a change with three reports is one finding with three witnesses |
 | `get_report` | Fetch one report, with every fix proposed for it |
 | `get_scenario` | One executable claim with the runs recorded against it: `runs: none` is a proposal, `unreached` counts for nothing |

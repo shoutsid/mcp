@@ -86,6 +86,7 @@ module AgentsMcp
       "record_release_facts" => :record_release_facts,
       "release_report" => :release_report,
       "search_reports" => :search_reports,
+      "list_unverified_reports" => :list_unverified_reports,
       "submit_report" => :submit_report,
       "submit_reports" => :submit_reports,
       "triage_failures" => :triage_failures,

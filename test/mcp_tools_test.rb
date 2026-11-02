@@ -58,6 +58,50 @@ class McpToolsTest < McpTest
     assert out.start_with?(BANNER)
   end
 
+  # **The queue names the gap, not only the list.** The number that decides whether a report
+  # promotes is the vouched subset, so a page that printed one count would leave a caller
+  # guessing whether its confirmation is the one that matters.
+  def test_list_unverified_reports_names_the_gap_and_sends_the_filters
+    body = {
+      "items" => [
+        { "id" => "11111111-1111-4111-8111-111111111111", "status" => "resolved_unverified",
+          "title" => "Stream stalls on the handshake", "library" => "httpx", "version" => "0.28.0",
+          "resolution" => "Raise the read timeout.", "confirmations" => 1,
+          "trusted_confirmations" => 0, "confirmations_required" => 2 }
+      ],
+      "count" => 1, "total" => 3, "limit" => 10, "offset" => 0, "has_more" => true,
+      "confirmations_required" => 2,
+      "next_step" => "Verify with POST /api/reports/11111111-1111-4111-8111-111111111111/verify."
+    }
+
+    out = answer(body).list_unverified_reports(
+      { "library" => "httpx", "ecosystem" => "python", "limit" => 10 }
+    )
+
+    call = api.calls[0]
+    assert call.path.end_with?("/api/reports/unverified")
+    assert_equal "httpx", call.params["library"]
+    assert_equal "python", call.params["ecosystem"]
+    assert_equal "10", call.params["limit"]
+    assert_includes out, "1 of 3 reports waiting"
+    assert_includes out, "0 vouched"
+    assert_includes out, "2 needed to verify"
+    assert_includes out, "next: Verify with"
+  end
+
+  # The tool clamps to the service's own bounds rather than forwarding a page the service would
+  # refuse: a model typing `limit: 5000` should get the biggest page that exists, not a 422.
+  def test_list_unverified_reports_clamps_the_page_and_says_when_the_queue_is_empty
+    body = { "items" => [], "total" => 0, "next_step" => "Nothing is waiting: every recorded " \
+                                                             "resolution has the confirmations it needs." }
+
+    out = answer(body).list_unverified_reports({ "limit" => 5000, "offset" => -4 })
+
+    assert_equal "100", api.calls[0].params["limit"]
+    assert_equal "0", api.calls[0].params["offset"]
+    assert_includes out, "Nothing is waiting"
+  end
+
   def test_find_answer_says_there_is_no_answer_when_there_is_none
     out = answer(an_unknown_answer).find_answer({ "query" => "nothing at all" })
 

@@ -5,6 +5,45 @@ module AgentsMcp
     # The reports tools' behaviour. The method names are the names `HANDLERS` dispatches
     # to, so nothing in the behaviour suite moved when this file was split out.
     module Reports
+      # The queue the ladder waits on. Ordered oldest first by the service, because that is which
+      # report has waited longest for the voice it needs; the two counts are rendered beside each
+      # other so a model can see the difference between "nobody reproduced this" and "people did,
+      # and none of their accounts was vouched for".
+      def list_unverified_reports(args)
+        params = {
+          "limit" => [[args.fetch("limit", 25).to_i, 1].max, 100].min,
+          "offset" => [[args.fetch("offset", 0).to_i, 0].max, 1000].min,
+        }
+        params["ecosystem"] = args["ecosystem"] if args["ecosystem"]
+        params["library"] = args["library"] if args["library"]
+
+        body = @client.request("GET", "/api/reports/unverified", params: params)
+        items = body["items"] || []
+        if items.empty?
+          return Rendering.wrap(
+            "No reports are waiting for a confirmation right now.\n\n#{body['next_step']}"
+          )
+        end
+
+        lines = ["#{body.fetch('count', items.length)} of #{body.fetch('total', items.length)} " \
+                 "reports waiting for a confirmation, oldest first."]
+        items.each do |item|
+          lines << ""
+          lines << "report_id: #{item['id']}"
+          lines << "status: #{item['status']}"
+          lines << "library: #{[item['library'], item['version']].compact.join(' ')}"
+          lines << "title: #{item['title']}"
+          lines << "confirmations: #{item['confirmations'] || 0} recorded, " \
+                   "#{item['trusted_confirmations'] || 0} vouched, " \
+                   "#{item['confirmations_required']} needed to verify"
+          lines << "resolution: #{item['resolution']}" if item["resolution"]
+        end
+        lines << ""
+        lines << "next: #{body['next_step']}" if body["next_step"]
+
+        Rendering.wrap(lines.join("\n"))
+      end
+
       def precheck_report(args)
         payload = {}
         {
