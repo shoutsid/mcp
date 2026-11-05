@@ -16,7 +16,7 @@ gem "mcp", "~> 1.8"
 # Rack application, and puma serves it. They are pinned here rather than added later so
 # the component keeps one lockfile.
 gem "puma", "~> 8.0"
-gem "rack", "~> 3.1"
+gem "rack", "~> 3.2"
 
 # The suite runs on this interpreter and needs no Rails, so minitest is the whole test
 # dependency. It is in the test group because the image installs without it.
