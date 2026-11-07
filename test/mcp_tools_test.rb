@@ -1249,6 +1249,40 @@ class McpToolsTest < McpTest
     refute api.calls[0].params.key?("symbols")
   end
 
+  # **The negative space and the documented half, in the one rendering.** A `changes` list with
+  # nothing in it does not mean the move was examined; `examined`/`clean` are the executions, and
+  # `documented` is a reading of the release's own words. The rendering keeps them apart.
+  def test_check_upgrade_renders_the_examined_and_documented_halves
+    body = an_upgrade_body(
+      "examined" => [
+        { "check_kind" => "differential", "outcome" => "clean", "environment_digest" => "abc123" }
+      ],
+      "clean" => [
+        { "check_kind" => "differential", "outcome" => "clean", "environment_digest" => "abc123" }
+      ],
+      "documented" => [
+        { "kind" => "removal", "version" => "2.0.5", "subject" => "ArchiveFTModelOut" }
+      ]
+    )
+
+    out = answer(body).check_upgrade(
+      { "library" => "mistralai", "from_version" => "1.9.11", "to_version" => "2.0.5" }
+    )
+
+    assert_includes out, "1 examined cell(s) of this move; 1 came back clean."
+    assert_includes out, "differential: clean (abc123)"
+    assert_includes out, "1 documented change(s) from the release's own notes (readings, not executions):"
+    assert_includes out, "removal at 2.0.5: ArchiveFTModelOut"
+  end
+
+  def test_check_upgrade_says_an_unexamined_move_is_an_absence_not_a_pass
+    out = answer(an_upgrade_body).check_upgrade(
+      { "library" => "mistralai", "from_version" => "1.9.11", "to_version" => "2.0.5" }
+    )
+
+    assert_includes out, "no examination of this move is recorded"
+  end
+
   def test_a_report_id_can_never_escape_its_own_path_segment
     api.respond({}, 404)
 
@@ -1601,6 +1635,82 @@ class McpToolsTest < McpTest
     assert_includes out, "status=resolved_verified"
     assert_includes out, "confirmations=2/2"
     assert_includes out, "counted_toward_promotion=False"
+  end
+
+  # **`check_compatibility` answers the question `check_upgrade` cannot: was this move examined?**
+  # It reads the same route and renders the `examined`/`clean` halves, so a clean cell is a result
+  # and an empty list is an absence rather than a pass.
+  def test_check_compatibility_renders_the_examined_cells
+    body = an_upgrade_body(
+      "examined" => [
+        { "check_kind" => "differential", "outcome" => "clean", "environment_digest" => "abc123",
+          "framework" => nil }
+      ],
+      "clean" => [
+        { "check_kind" => "differential", "outcome" => "clean", "environment_digest" => "abc123",
+          "framework" => nil }
+      ]
+    )
+
+    out = answer(body).check_compatibility(
+      { "library" => "mistralai", "from_version" => "1.9.11", "to_version" => "2.0.5" }
+    )
+
+    assert api.calls[0].path.end_with?("/api/reports/upgrade")
+    assert_includes out, "1 examined cell(s) of this move; 1 came back clean"
+    assert_includes out, "differential: clean"
+    assert_includes out, "abc123"
+  end
+
+  def test_check_compatibility_says_an_unexamined_move_is_an_absence
+    out = answer(an_upgrade_body).check_compatibility(
+      { "library" => "mistralai", "from_version" => "1.9.11", "to_version" => "2.0.5" }
+    )
+
+    assert_includes out, "no examination of this move is recorded"
+  end
+
+  # **`get_release_notes` is the documented half, rendered with its quote and provenance.** A
+  # documented change is a reading of a release's own words, never evidence.
+  def test_get_release_notes_renders_the_quote_and_provenance
+    body = {
+      "library" => "rails", "ecosystem" => "ruby", "untrusted_content" => true,
+      "items" => [
+        { "kind" => "removal", "version" => "7.1.6", "subject" => "before_filter",
+          "detail" => "The callback was removed.", "quote" => "`before_filter` was removed.",
+          "reviewed" => false, "extracted_by" => "consultant", "confidence" => 0.8 }
+      ],
+      "count" => 1, "next_step" => "1 documented change(s), 0 reviewed by a person."
+    }
+
+    out = answer(body).get_release_notes({ "library" => "rails", "ecosystem" => "ruby" })
+
+    call = api.calls[0]
+    assert call.path.end_with?("/api/releases/documented")
+    assert_equal "rails", call.params["library"]
+    assert_includes out, "removal at 7.1.6: before_filter"
+    assert_includes out, "quote: `before_filter` was removed."
+    assert_includes out, "confidence 0.8"
+  end
+
+  # **`list_dependents` reads the reverse of the declared facts.** The requirements are the source's
+  # own statements, and the answer is a lower bound.
+  def test_list_dependents_renders_the_reverse_edges
+    body = {
+      "ecosystem" => "ruby", "dependency" => "actionpack", "count" => 2, "libraries" => 1,
+      "dependents" => [
+        { "library" => "rails", "versions" => ["7.1.6"], "requirements" => ["= 7.1.6"] }
+      ],
+      "next_step" => "2 recorded release(s) declare a dependency on `actionpack`."
+    }
+
+    out = answer(body).list_dependents({ "library" => "actionpack", "ecosystem" => "ruby" })
+
+    call = api.calls[0]
+    assert call.path.end_with?("/api/releases/dependents")
+    assert_equal "actionpack", call.params["library"]
+    assert_includes out, "2 recorded release(s) depend on actionpack"
+    assert_includes out, "rails: 7.1.6 requires = 7.1.6"
   end
 
   private

@@ -2379,6 +2379,196 @@
         "openWorldHint": true,
         "readOnlyHint": true
       }
+    },
+    {
+      "name": "check_compatibility",
+      "title": "Check what has actually been examined, not only what broke",
+      "description": "What this corpus has *executed* for a move, as opposed to what it has reported broken.\n\n    `check_upgrade` answers from reports: a move with no report comes back with an empty\n    change list, and that empty list has two meanings it cannot tell apart — nobody has\n    looked, or somebody looked and found nothing. This tool answers that second question\n    directly. It returns the examined cells of the move, each naming the check that ran\n    (a differential, a resolution, an install, a load, a boot, a scenario), the outcome\n    (`clean`, `findings`, `unexaminable` or `failed`) and the environment it ran in.\n\n    Read the answer carefully. `clean` is an executed result and is the strongest thing\n    this corpus can say about a move; `unexaminable` means the machine could not build the\n    release, which is a fact about the machine rather than the code; `failed` means the\n    examination itself failed and is work again; and an empty list is none of those — it is\n    the absence of evidence, which is not evidence of safety.\n\n    Args:\n        library: The distribution to check, spelled as the package index has it.\n        from_version: The release you are on now.\n        to_version: The release you are considering moving to.\n        ecosystem: Which package index this library is a release of: `python` (PyPI, the\n            default) or `ruby` (RubyGems).\n",
+      "inputSchema": {
+        "properties": {
+          "library": {
+            "title": "Library",
+            "type": "string"
+          },
+          "from_version": {
+            "title": "From Version",
+            "type": "string"
+          },
+          "to_version": {
+            "title": "To Version",
+            "type": "string"
+          },
+          "ecosystem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ecosystem"
+          }
+        },
+        "required": [
+          "library",
+          "from_version",
+          "to_version"
+        ],
+        "type": "object",
+        "title": "check_compatibilityArguments"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "title": "check_compatibilityOutput"
+      },
+      "annotations": {
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      }
+    },
+    {
+      "name": "get_release_notes",
+      "title": "Read a release's own words, and what a model read in them",
+      "description": "The documented half of an upgrade: what a release's own changelog says changed.\n\n    `check_upgrade` answers from what the corpus *executed*; this answers from what the\n    release *said*. A changelog names a deprecation, a default that moved, a dependency\n    that changed — things a symbol diff cannot see — and each documented change here\n    carries the quote it was extracted from and the reader's provenance, so you can check\n    the reading rather than trust it.\n\n    Read it as a lead, never as evidence. A documented change is somebody's reading of\n    prose; nothing here was executed, and `clean`/`findings` on `check_compatibility` is\n    what the corpus ran. `reviewed` says a person read the source and agrees — a stronger\n    reading, still not an execution.\n\n    Args:\n        library: The distribution, spelled as the package index has it.\n        version: One release to narrow to, e.g. `7.1.6`. Omit for every recorded release.\n        ecosystem: `python` (PyPI, the default) or `ruby` (RubyGems).\n        kind: One documented kind: deprecation, removal, rename, move, default_changed,\n            behaviour_changed, dependency, security, other.\n",
+      "inputSchema": {
+        "properties": {
+          "library": {
+            "title": "Library",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Version"
+          },
+          "ecosystem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ecosystem"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Kind"
+          }
+        },
+        "required": [
+          "library"
+        ],
+        "type": "object",
+        "title": "get_release_notesArguments"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "title": "get_release_notesOutput"
+      },
+      "annotations": {
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      }
+    },
+    {
+      "name": "list_dependents",
+      "title": "Find which recorded releases depend on a library",
+      "description": "Who declares a dependency on a library, read backwards from the release facts the\n    corpus already holds.\n\n    Reach for this before moving a gem: `check_upgrade` says what breaks a caller who\n    *uses* the library, and this says which recorded releases *name* it at all — the\n    blast radius of the move. The requirements are the source's own statements, not a\n    verdict; `plan_gem_moves` is what says whether a requirement is satisfied.\n\n    Read the answer as a lower bound. It is the releases whose facts the corpus holds, so\n    a gem nobody walked is absent rather than independent — the `next_step` says so.\n\n    Args:\n        library: The dependency to read backwards, spelled as the index has it.\n        ecosystem: `ruby` (RubyGems, the default) or `python` (PyPI).\n        limit: How many edges to read. Clamped to what one page carries.\n",
+      "inputSchema": {
+        "properties": {
+          "library": {
+            "title": "Library",
+            "type": "string"
+          },
+          "ecosystem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ecosystem"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Limit"
+          }
+        },
+        "required": [
+          "library"
+        ],
+        "type": "object",
+        "title": "list_dependentsArguments"
+      },
+      "outputSchema": {
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "type": "object",
+        "title": "list_dependentsOutput"
+      },
+      "annotations": {
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "readOnlyHint": true
+      }
     }
   ],
   "call": {

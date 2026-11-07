@@ -8,7 +8,7 @@ file is the reference behind it.
 The protocol is the official Ruby SDK (`mcp` 1.8). The handshake, the tool list, the call,
 pagination, cancellation and both transports are the gem's; what is here is the surface —
 what a tool is called and what it says — and the behaviour behind it. `lib/agents_mcp/surface.rb`
-declares the thirty-four `MCP::Tool` subclasses, `lib/agents_mcp/tools/` implements what they do,
+declares the thirty-eight `MCP::Tool` subclasses, `lib/agents_mcp/tools/` implements what they do,
 and `data/surface.json` is the frozen recording the declared surface is reconciled against
 (`test/mcp_tools_golden_test.rb`). The recording is no longer the bytes a client receives: a
 server that serves a recorded handshake is reproducing one answer to the protocol rather than
@@ -21,6 +21,9 @@ tell.
 | `check_ruby_compatibility` | Whether one gem release runs on the Ruby version you are moving to, from the release's declared requirement — `unknown` is never a pass |
 | `record_release_facts` | The miner's write: the Ruby requirement each gem release declares, recorded against the release |
 | `check_upgrade` | What breaks on the way from one release to another — asked *before* the failure |
+| `check_compatibility` | What has actually been *examined* for a move — clean, findings, unexaminable or failed — as opposed to what broke. An empty list is unexamined, not safe |
+| `get_release_notes` | A release's own words, and what a model read in them: documented changes with the quote and provenance. A lead, never evidence |
+| `list_dependents` | Which recorded releases declare a dependency on a library — the blast radius of a move, read backwards from the facts the corpus holds |
 | `find_answer` | What to do about a failure, and how much to trust it |
 | `find_rails_edits` | The call sites in your own files for a Rails upgrade: the whole-word renames applied, everything else listed with the reason and not rewritten |
 | `scan_upgrade_delta` | The same scan over only the files that moved since your manifest: added, changed, unchanged, deleted and skipped, with the edits they carry |

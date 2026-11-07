@@ -172,6 +172,7 @@ module McpTestSupport
       "unclassified" => [], "scanned" => 60, "truncated" => false,
       "asked_symbols" => ["archiveftmodelout"], "unknown_symbols" => [],
       "unmatched_changes" => 0,
+      "examined" => [], "clean" => [], "documented" => [],
       "next_step" => "1 of the 1 change(s) crossing this move is about a name you asked about."
     }.merge(overrides.transform_keys(&:to_s))
   end

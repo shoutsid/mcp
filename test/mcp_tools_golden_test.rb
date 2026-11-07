@@ -8,7 +8,7 @@ require_relative "test_helper"
 # the server answered with before the SDK owned the protocol. The server now builds its surface from
 # `surface.rb`, and this file holds the two together: every declared tool has a handler and a class,
 # the SDK's `initialize` and `tools/list` still say what the recording says after the differences in
-# § The allowed differences are applied, and the two documents that table the tools name all thirty-two.
+# § The allowed differences are applied, and the two documents that table the tools name all thirty-eight.
 #
 # **The reconciliation is deliberately not equality.** Three differences are real and each is
 # stated below; everything else has to match, which is what makes a transcription slip in a

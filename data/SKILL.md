@@ -202,6 +202,9 @@ submitting, so passing those through keeps the run filed the way it was checked.
 | `check_ruby_compatibility` | Whether one RubyGems release runs on the Ruby version you are moving to, before the Ruby upgrade. Unknown is not a pass |
 | `record_release_facts` | Operators only: the miner records the Ruby requirement each gem release declares |
 | `check_upgrade` | What breaks on the way from one release to another, before you move |
+| `check_compatibility` | What has actually been *examined* for a move — clean, findings, unexaminable or failed — as opposed to what broke. An empty list is unexamined, not safe |
+| `get_release_notes` | A release's own words, and what a model read in them: documented changes with the quote and provenance. A lead, never evidence |
+| `list_dependents` | Which recorded releases declare a dependency on a library — the blast radius of a move, read backwards from the facts the corpus holds |
 | `find_answer` | What to do about a failure, and how much to trust it |
 | `find_rails_edits` | The call sites in the files you send for a Rails upgrade: the whole-word renames applied, everything else listed with the reason |
 | `scan_upgrade_delta` | The same scan over only the files that moved since your manifest: added, changed, unchanged, deleted and skipped, with the edits they carry |

@@ -25,6 +25,9 @@ class McpTransportTest < McpTest
     check_lockfile_ruby_compatibility
     check_ruby_compatibility
     check_upgrade
+    check_compatibility
+    get_release_notes
+    list_dependents
     claim_report
     find_answer
     find_rails_edits
@@ -66,6 +69,9 @@ class McpTransportTest < McpTest
     check_lockfile_ruby_compatibility
     check_ruby_compatibility
     check_upgrade
+    check_compatibility
+    get_release_notes
+    list_dependents
     find_answer
     find_rails_edits
     scan_upgrade_delta
