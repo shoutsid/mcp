@@ -2,6 +2,7 @@
 
 require "json"
 require "mcp"
+require "yaml"
 
 module AgentsMcp
   # The documents behind the tools, and one live report, as resources a client can read.
@@ -16,6 +17,67 @@ module AgentsMcp
   # surface for a client that does not implement resources.
   module Resources
     COMPONENT_ROOT = File.expand_path("../..", __dir__)
+
+    # The skills this component ships, as files and as resources.
+    #
+    # **The tools are grouped by the job a caller has, not by the domain they live in.** One
+    # skill for all thirty-eight tools is a document a model has to read whole before it can
+    # reach one; four skills are four documents, and a harness loads the one that matches the
+    # work. The grouping is declared here once, and the index and the resources are generated
+    # from it so a skill cannot be listed without being readable.
+    #
+    # **The description is read from the file's own frontmatter.** The skill's `description` is
+    # the sentence a harness uses to decide whether to load it, which is exactly what a
+    # resource's description is for — so the file is the source of truth and there is no second
+    # copy to drift. The canonical files live in the service's `.claude/skills/`; the copies
+    # here are held byte-identical by the service's contract suite, because the image's build
+    # context is this component and the repository root is not in it.
+    module Skills
+      NAMES = %w[agents agents-upgrade agents-rails agents-decisions].freeze
+      ROOT = File.join(COMPONENT_ROOT, "data", "skills")
+
+      def self.each
+        NAMES.map { |name| load(name) }
+      end
+
+      def self.load(name)
+        path = File.join(ROOT, name, "SKILL.md")
+        { name: name, description: frontmatter(File.read(path))["description"].to_s, path: path }
+      end
+
+      # The index a client reads before it knows which skill it wants: one row per skill, the
+      # same sentence the harness sees, and the URI to read the whole thing at.
+      def self.index
+        lines = [
+          "# Agents skills",
+          "",
+          "The MCP server's tools, grouped by the job you have. Each skill is self-contained;",
+          "read the one that matches, or the whole text at its own URI.",
+          "",
+          "| Skill | Load it when |",
+          "|---|---|",
+        ]
+        NAMES.each { |name| lines << row(load(name)) }
+        lines << ""
+        lines << "Read one with `agents://skills/<name>`."
+        lines.join("\n")
+      end
+
+      # One index row: the skill's name and the sentence a harness chooses it by.
+      def self.row(skill)
+        "| `#{skill[:name]}` | #{skill[:description]} |"
+      end
+
+      # The `name` and `description` between the leading `---` fences. A skill without them is a
+      # file a harness cannot choose, so an empty hash is a fact worth failing on rather than a
+      # default to paper over.
+      def self.frontmatter(text)
+        match = text.match(/\A---\n(.*?)\n---\n/m)
+        return {} unless match
+
+        YAML.safe_load(match[1]) || {}
+      end
+    end
 
     # A read that cannot be made is a fact about the resource, not about the protocol: the sentence
     # a `ToolError` carries is written for a caller to act on, so it is returned as the resource's
@@ -86,22 +148,62 @@ module AgentsMcp
       end
     end
 
-    # The skill, which is the README explained as *when* to reach for a tool. It ships as
-    # `data/SKILL.md`, a copy of `.claude/skills/agents/SKILL.md` held in step by a test,
-    # because the image's build context is this component and the repository root is not in it.
-    class Skill < MCP::Resource
-      uri "agents://skill"
-      resource_name "skill"
-      title "The agents skill"
-      description "When to reach for each tool, and the rules for report text that is not yours."
+    # The index of the skills: which one to load for the job you have. It is generated from
+    # `Skills`, so a skill cannot be added to the list without also being readable.
+    class SkillsIndex < MCP::Resource
+      uri "agents://skills"
+      resource_name "skills"
+      title "The agents skills"
+      description "The tools grouped by job: which skill to load for the work you have, and " \
+                  "the URI to read each one at."
       mime_type "text/markdown"
 
       def self.contents(server_context:)
-        Resources.file(uri, File.join(COMPONENT_ROOT, "data/SKILL.md"), mime_type: mime_type)
+        Resources.text(uri, Skills.index, mime_type: mime_type)
       end
     end
 
-    ALL = [Discovery, Llms, Readme, Skill].freeze
+    # One skill, as a resource. The four differ only in which file they read, so the base reads
+    # the registry and each subclass names its skill; the title, description and URI all come
+    # from that one name.
+    class SkillResource < MCP::Resource
+      def self.skill(name)
+        data = Skills.load(name)
+        uri "agents://skills/#{name}"
+        resource_name "skill_#{name.tr('-', '_')}"
+        title "The #{name} skill"
+        description data[:description]
+        mime_type "text/markdown"
+        @skill_name = name
+      end
+
+      def self.skill_name
+        @skill_name
+      end
+
+      def self.contents(server_context:)
+        Resources.file(uri, Skills.load(skill_name)[:path], mime_type: mime_type)
+      end
+    end
+
+    class SkillAgents < SkillResource
+      skill "agents"
+    end
+
+    class SkillAgentsUpgrade < SkillResource
+      skill "agents-upgrade"
+    end
+
+    class SkillAgentsRails < SkillResource
+      skill "agents-rails"
+    end
+
+    class SkillAgentsDecisions < SkillResource
+      skill "agents-decisions"
+    end
+
+    ALL = [Discovery, Llms, Readme, SkillsIndex, SkillAgents, SkillAgentsUpgrade, SkillAgentsRails,
+      SkillAgentsDecisions].freeze
 
     # One report, by id: the same answer `get_report` gives, without a tool call.
     class Report < MCP::ResourceTemplate

@@ -1,8 +1,8 @@
 # Agents MCP server
 
 `bin/agents-mcp` exposes the service as MCP tools, so a harness can use it without
-hand-rolling HTTP. It is what most callers actually touch: the `SKILL.md` a harness
-installs is the same server explained to an agent as *when* to reach for a tool, and this
+hand-rolling HTTP. It is what most callers actually touch: the `SKILL.md` files a harness
+installs are the same server explained to an agent as *when* to reach for a tool, and this
 file is the reference behind it.
 
 The protocol is the official Ruby SDK (`mcp` 1.8). The handshake, the tool list, the call,
@@ -55,6 +55,23 @@ tell.
 | `flag_report` | Object to a report that is wrong, or aimed at the reader |
 | `submit_report` | Contribute a finding |
 | `submit_reports` | Contribute a whole run of findings at once |
+
+## The skills
+
+The table above is the reference; the **skills** are the same tools grouped by the job a caller
+has, and they are what a harness actually loads. Each is shipped as `data/skills/<name>/SKILL.md`
+and read as a resource:
+
+| Skill | Job | Tools |
+|---|---|---|
+| `agents` | The core loop for a failure you already have: search, precheck, verify, submit, claim, resolve, outcome | 16 |
+| `agents-upgrade` | Before a dependency or Ruby move: `check_upgrade`, `check_compatibility`, `get_release_notes`, `list_dependents`, `gem_migrations`, `plan_gem_moves`, the Ruby checks | 9 |
+| `agents-rails` | A Rails framework upgrade: the ladder, the plan, the edits in your own files, the applications walked | 5 |
+| `agents-decisions` | The questions a blocked upgrade walk stopped on, and the profile facts it is missing | 8 |
+
+The index is `agents://skills` and one skill is read at `agents://skills/<name>`. Every tool has a
+row in the table above and a row in exactly one skill's table; `mcp_tools_golden_test.rb` refuses a
+tool that is missing from either surface, or documented in two skills.
 
 The decision tools are the agent's half of a blocked walk: `list_decisions` and
 `get_decision` read the question, `propose_decision` records a typed proposal and
@@ -126,9 +143,10 @@ CONTENT` markers, because report text is attacker-controllable and an agent that
 followed instructions found inside one would be the payload of a prompt-injection
 attack.
 The service checkout's `.mcp.json` registers it for harnesses that read that file, and the
-service's `.claude/skills/agents/SKILL.md` teaches an agent *when* to reach for it. This
-repository ships the same text as `data/SKILL.md`, so a harness that installs the client has the
-skill without needing the service checkout.
+service's `.claude/skills/agents*/SKILL.md` teach an agent *when* to reach for a tool. The tools
+are grouped into four skills by the job a caller has, and this repository ships each as
+`data/skills/<name>/SKILL.md`, so a harness that installs the client has them without needing the
+service checkout.
 
 ## Prompts and resources
 
@@ -140,8 +158,9 @@ the opposite:
   instructions describe, laid out as steps. A prompt changes nothing; the tools it names still
   decide and still refuse.
 - **`resources/list`** carries `agents://discovery` and `agents://llms.txt` (fetched live
-  from the service), `agents://readme` and `agents://skill` (the files this component
-  ships), and the template `report://{id}` for one report's whole body without a tool call.
+  from the service), `agents://readme`, the skills index `agents://skills` and the four skills
+  `agents://skills/<name>` (the files this component ships), and the template `report://{id}` for
+  one report's whole body without a tool call.
 
 The version a client is offered is still the recording's: `tools`, `prompts` and `resources` with
 `listChanged: false`, and no `logging` capability, because this server never changes a list and does
@@ -228,7 +247,7 @@ bundle exec ruby -Ilib -Itest test/all_test.rb
 
 The suite needs no network and no service: the HTTP layer is stubbed, and one file opens a real
 stdio session with the server. The client's agreements with the service — the service lockfile,
-its `.dockerignore`, its canonical skill — live in the service's own contract suite, because only
+its `.dockerignore`, its canonical skills — live in the service's own contract suite, because only
 a checkout that holds both sides can test them. See [Development](docs/development.md).
 
 ## Contributing

@@ -61,10 +61,10 @@ docker build -t agents-mcp .
   the annotations to decide whether a call needs permission.
 - **The service bundle must not carry `mcp`.** The client's bundle is its own, and the
   service's root lockfile is asserted not to carry the gem.
-- **The skill and the README table every tool.** A tool that ships without a row in both is a
-  tool a model cannot find.
+- **The skills and the README table every tool.** A tool that ships without a row in the README
+  and in exactly one skill's table is a tool a model cannot find.
 - **Cross-repository agreements live in the service's contract suite.** Do not add a local copy
-  of the service's lockfile, `.dockerignore` or canonical `.claude` skill.
+  of the service's lockfile, `.dockerignore` or canonical `.claude` skills.
 - **Do not skip a test to make the suite green.** If an agreement needs both repositories, move
   it to the service's contract suite; if it can be stated here, state it here.
 
@@ -79,7 +79,7 @@ docker build -t agents-mcp .
 
 - One concern per change.
 - Add or update a test that would fail without the change.
-- Update the README tool table and `data/SKILL.md` when a tool is added, renamed or removed.
+- Update the README tool table and the matching skill's table under `data/skills/` when a tool is added, renamed or removed.
 - Do not add a secret, a token or a private report body to a fixture.
 - Describe how you tested it, including the Ruby version and whether a service or Docker was
   involved.

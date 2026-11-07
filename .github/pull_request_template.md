@@ -33,7 +33,7 @@ bundle exec ruby -Ilib -Itest test/all_test.rb
 - [ ] A test would fail without this change.
 - [ ] The suite passes locally: `bundle exec ruby -Ilib -Itest test/all_test.rb`.
 - [ ] No new runtime dependency was added without prior discussion.
-- [ ] A tool added, renamed or removed has a row in the README table and in `data/SKILL.md`.
+- [ ] A tool added, renamed or removed has a row in the README table and in exactly one skill's table under `data/skills/`.
 - [ ] The docs are updated if a tool, annotation, schema, transport or environment variable changed.
 - [ ] No secret, operator key or private report body is present in a fixture or this pull request.
-- [ ] If the agreement needs the service's lockfile, `.dockerignore` or canonical skill, the test lives in the service's contract suite rather than being skipped here.
+- [ ] If the agreement needs the service's lockfile, `.dockerignore` or canonical skills, the test lives in the service's contract suite rather than being skipped here.

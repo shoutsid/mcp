@@ -200,7 +200,7 @@ module AgentsMcp
     end
 
     # How long to wait before trying again, when the service said. Only a 429 gets
-    # this sentence: the skill tells a model to honour `Retry-After`, and until the
+    # this sentence: the skills tell a model to honour `Retry-After`, and until the
     # value was surfaced the instruction was unactionable.
     def retry_hint(response)
       return nil unless response.status == 429

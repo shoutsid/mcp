@@ -13,7 +13,7 @@ The gem (`mcp` 1.8) is the protocol. This repository is the surface and the beha
 | `lib/agents_mcp/identity.rb` | What the server says it is: name, title, version, description, instructions. |
 | `lib/agents_mcp/server.rb` | Builds the SDK server from the surface and the client. |
 | `lib/agents_mcp/prompts.rb` | `triage_a_failing_run` and `plan_an_upgrade`. |
-| `lib/agents_mcp/resources.rb` | Discovery, `llms.txt`, the README, the skill and one report body. |
+| `lib/agents_mcp/resources.rb` | Discovery, `llms.txt`, the README, the skills index, the four skills and one report body. |
 | `lib/agents_mcp/http_app.rb` | The hosted Streamable HTTP transport, one server per request. |
 | `bin/agents-mcp` | The stdio entrypoint and the bundle wrapper. |
 | `config.ru` | The Rack application puma serves. |
@@ -21,13 +21,14 @@ The gem (`mcp` 1.8) is the protocol. This repository is the surface and the beha
 ## The surface is declared once
 
 A tool has four parts: a `Surface` subclass, a handler in `Tools::HANDLERS`, a row in the README
-tool table, and a row in `data/SKILL.md`. Four tests hold them together:
+tool table, and a row in exactly one skill's table under `data/skills/`. Four tests hold them
+together:
 
 - `mcp_tools_golden_test.rb` reconciles the SDK's `initialize` and `tools/list` against the
   frozen `data/surface.json`, after the three allowed differences;
 - every declared tool has a handler and a surface class;
 - every tool carries a title, a description and both schemas;
-- the skill and the README table every tool.
+- the skills and the README table every tool, and no tool is documented in two skills.
 
 `data/surface.json` is an **oracle**, not the bytes a caller receives. It recorded the handshake
 the server answered before the SDK owned the protocol. The recording is frozen; a change to the

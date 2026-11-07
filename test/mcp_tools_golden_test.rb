@@ -85,23 +85,37 @@ class McpToolsGoldenTest < McpTest
     end
   end
 
-  def test_the_skill_documents_every_tool_the_server_registers
-    # The skill is the layer that says *when* to reach for a tool, and nothing tied it to the code
-    # until now — it was one tool behind the moment a tool shipped, which is exactly the kind of rot
-    # invisible from inside the repository's tests.
-    assert_documents_every_tool(
-      File.join(McpTestSupport::ROOT, "data/SKILL.md"), "skill"
-    )
+  def test_the_skills_document_every_tool_the_server_registers
+    # The skills are the layer that says *when* to reach for a tool, and nothing tied them to the
+    # code until now — one was a tool behind the moment a tool shipped, which is exactly the kind
+    # of rot invisible from inside the repository's tests. The tools are split across four skills
+    # by the job a caller has, so the guard is a union: every tool has a row in exactly one
+    # skill's table, and no tool is documented in two.
+    tools = McpTestSupport::SURFACE["tools"].map { |tool| tool["name"] }
+    documented = skill_paths.flat_map do |path|
+      File.read(path).scan(/^\| `([a-z_]+)` \|/).flatten
+    end
+
+    assert_equal tools.sort, documented.uniq.sort,
+      "not in any skill's tool table: #{(tools - documented).sort}"
+    assert_empty documented.tally.select { |_, count| count > 1 }.keys.sort,
+      "documented in more than one skill"
   end
 
   def test_the_readme_documents_every_tool_the_server_registers
-    # The same guard one file over: `check_upgrade` shipped with a row in the skill and none in the
+    # The same guard one file over: `check_upgrade` shipped with a row in a skill and none in the
     # tool table and nothing failed, so both surfaces that table the tools are read here rather than
     # only the one that had a test.
     assert_documents_every_tool(File.join(McpTestSupport::ROOT, "README.md"), "README")
   end
 
   private
+
+  # The skills this component ships, one file per skill. The set is discovered rather than
+  # hardcoded, so a skill added to `data/skills/` is held to the same guard as the rest.
+  def skill_paths
+    Dir.glob(File.join(McpTestSupport::ROOT, "data", "skills", "*", "SKILL.md")).sort
+  end
 
   def served
     @served ||= begin

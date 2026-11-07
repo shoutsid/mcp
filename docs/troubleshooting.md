@@ -42,9 +42,9 @@ and `next_step`; the tool renders both.
 `unknown` is not a pass. `check_ruby_compatibility`, `check_lockfile_ruby_compatibility` and
 `plan_gem_moves` count an unknown separately and never turn it into a green answer.
 
-## The skill and the server disagree
+## The skills and the server disagree
 
-`data/SKILL.md` and the README table are read by the suite; a tool added without a row fails
-`mcp_tools_golden_test.rb`. In the service checkout,
-`test/contracts/mcp/boundary_test.rb` holds `data/SKILL.md` to the canonical
-`.claude/skills/agents/SKILL.md`.
+`data/skills/*/SKILL.md` and the README table are read by the suite; a tool added without a row
+fails `mcp_tools_golden_test.rb`, which also refuses a tool documented in two skills. In the
+service checkout, `test/contracts/mcp/boundary_test.rb` holds each `data/skills/<name>/SKILL.md`
+to the canonical `.claude/skills/<name>/SKILL.md`.

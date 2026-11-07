@@ -68,9 +68,39 @@ class McpPromptsResourcesTest < McpTest
     listed = request(sdk_server, 1, "resources/list")
     uris = listed.dig("result", "resources").map { |resource| resource["uri"] }
 
-    assert_equal %w[agents://discovery agents://llms.txt agents://readme agents://skill],
-      uris.sort
+    assert_equal %w[
+      agents://discovery
+      agents://llms.txt
+      agents://readme
+      agents://skills
+      agents://skills/agents
+      agents://skills/agents-decisions
+      agents://skills/agents-rails
+      agents://skills/agents-upgrade
+    ], uris.sort
     assert_equal uris.length, uris.uniq.length
+  end
+
+  def test_the_skills_index_names_every_skill
+    reply = request(sdk_server, 1, "resources/read", { uri: "agents://skills" })
+
+    text = reply.dig("result", "contents", 0, "text").to_s
+    %w[agents agents-upgrade agents-rails agents-decisions].each do |name|
+      assert_includes text, "`#{name}`"
+    end
+  end
+
+  def test_each_skill_resource_reads_its_file
+    # The four skills are the same document the harness installs, read from the component that
+    # ships it. A resource that answered the wrong file, or an empty one, is a skill a caller
+    # cannot load.
+    %w[agents agents-upgrade agents-rails agents-decisions].each do |name|
+      reply = request(sdk_server, 1, "resources/read", { uri: "agents://skills/#{name}" })
+
+      text = reply.dig("result", "contents", 0, "text").to_s
+      assert_includes text, "name: #{name}", name
+      assert_includes text, "| Tool | Purpose |", name
+    end
   end
 
   def test_the_discovery_resource_reads_the_live_document
