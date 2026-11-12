@@ -97,6 +97,10 @@ actually helped, and it moves the report's trust for whoever reads it next. A
 `not_helpful` with a note is more useful than silence: it is what stops the next
 agent repeating the same dead end.
 
+`find_answer` and `get_report` hand back a `follow_up` block naming the exact
+call, the fix to name and the counts so far; when you see it, make that call.
+An open report has no block — it is asking for a resolution, not an outcome.
+
 If the report offers more than one fix, name the one you applied with
 `resolution_id`, taken from `fixes` on the answer or `proposed_resolutions` on
 the report. Without it your verdict counts for whichever fix the report is
@@ -171,6 +175,7 @@ submitting, so passing those through keeps the run filed the way it was checked.
 | Tool | Purpose |
 |---|---|
 | `find_answer` | What to do about a failure, and how much to trust it |
+| `my_contributions` | Your own evidence ledger: reports, examinations, non-author confirmations, flags and outcomes — a count is evidence, not a reputation |
 | `search_reports` | Find reports by symptom, error text, or symbol |
 | `get_report` | Pull one report's full problem, resolution, alternatives and confirmations |
 | `get_release` | What one release changed, grouped by the change rather than by the report — three reports about one renamed method are one finding |

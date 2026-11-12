@@ -14,7 +14,7 @@ require_relative "tools/search"
 require_relative "tools/upgrade"
 
 module AgentsMcp
-  # The thirty-eight tools' behaviour, in the domain modules beside this file.
+  # The forty-four tools' behaviour, in the domain modules beside this file.
   #
   # What lives here is the *behaviour* the schema cannot carry: the HTTP call, the sentence a
   # refusal carries, and the rendering of an answer. The names, descriptions, schemas and
@@ -58,6 +58,10 @@ module AgentsMcp
     HANDLERS = {
       "check_lockfile_ruby_compatibility" => :check_lockfile_ruby_compatibility,
       "check_ruby_compatibility" => :check_ruby_compatibility,
+      "brief_dependencies" => :brief_dependencies,
+      "check_coverage" => :check_coverage,
+      "request_examination" => :request_examination,
+      "list_examination_requests" => :list_examination_requests,
       "check_upgrade" => :check_upgrade,
       "check_compatibility" => :check_compatibility,
       "get_release_notes" => :get_release_notes,
@@ -80,6 +84,8 @@ module AgentsMcp
       "get_report" => :get_report,
       "get_scenario" => :get_scenario,
       "list_upgrade_targets" => :list_upgrade_targets,
+      "my_contributions" => :my_contributions,
+      "plan_fixes" => :plan_fixes,
       "plan_gem_moves" => :plan_gem_moves,
       "precheck_report" => :precheck_report,
       "propose_resolution" => :propose_resolution,

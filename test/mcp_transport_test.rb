@@ -24,6 +24,10 @@ class McpTransportTest < McpTest
   TOOLS = %w[
     check_lockfile_ruby_compatibility
     check_ruby_compatibility
+    brief_dependencies
+    check_coverage
+    request_examination
+    list_examination_requests
     check_upgrade
     check_compatibility
     get_release_notes
@@ -60,6 +64,8 @@ class McpTransportTest < McpTest
     triage_failures
     verify_report
     withdraw_decision
+    plan_fixes
+    my_contributions
   ].freeze
 
   # Tools that change nothing a caller cares about. A harness uses this to decide whether a call
@@ -68,6 +74,9 @@ class McpTransportTest < McpTest
   READ_ONLY = %w[
     check_lockfile_ruby_compatibility
     check_ruby_compatibility
+    brief_dependencies
+    check_coverage
+    list_examination_requests
     check_upgrade
     check_compatibility
     get_release_notes
@@ -88,6 +97,8 @@ class McpTransportTest < McpTest
     precheck_report
     rails_ladder
     rails_upgrade_plan
+    plan_fixes
+    my_contributions
     resolution_plan
     search_reports
     triage_failures

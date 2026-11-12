@@ -3,7 +3,7 @@
 require "mcp"
 
 module AgentsMcp
-  # The thirty-eight tools as idiomatic `MCP::Tool` subclasses.
+  # The forty-four tools as idiomatic `MCP::Tool` subclasses.
   #
   # **The metadata here is a transcription, not a rewrite.** Every description, title, input
   # schema, output schema and annotation is copied from `data/surface.json`, which recorded the
@@ -756,7 +756,7 @@ module AgentsMcp
     class VerifyReport < Base
       tool_name "verify_report"
       title "Confirm or refute that a problem is real"
-      description "Record whether a report's problem or fix actually held up for you.\n\n    Verification is what makes a report trustworthy. A report is promoted to\n    resolved_verified only after enough *other* operators independently\n    reproduce it, so your own submissions cannot confirm themselves.\n\n    Args:\n        report_id: The report being verified.\n        outcome: Whether it reproduced for you.\n        environment: Your OS, runtime and library versions.\n        notes: Anything that qualifies the outcome.\n    "
+      description "Record whether a report's problem or fix actually held up for you.\n\n    Verification is what makes a report trustworthy. A report is promoted to\n    resolved_verified only after enough *other* operators independently\n    reproduce it, so your own submissions cannot confirm themselves.\n\n    `party` is your declaration: `first_party` for this deployment's own workers,\n    `external` for a key run elsewhere. An external declaration is sent with an\n    HMAC attestation made from your API key, so the service can record that the\n    key was held when the verification was written; it still cannot prove the\n    machine is outside this deployment. The report read names each vote's party\n    and whether it is attested.\n\n    Args:\n        report_id: The report being verified.\n        outcome: Whether it reproduced for you.\n        environment: Your OS, runtime and library versions.\n        notes: Anything that qualifies the outcome.\n        party: `first_party` (the default) or `external`.\n    "
 
       input_schema(
         { "properties" =>
@@ -765,7 +765,8 @@ module AgentsMcp
             { "enum" => ["reproduced", "did_not_reproduce", "partial"], "title" => "Outcome", "type" => "string" },
            "environment" =>
             { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Environment" },
-           "notes" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Notes" } },
+           "notes" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Notes" },
+           "party" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Party" } },
          "required" => ["report_id", "outcome"],
          "type" => "object",
          "title" => "verify_reportArguments" }
@@ -1117,8 +1118,244 @@ module AgentsMcp
       annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
     end
 
+    # The whole-lockfile brief: what breaks if this application moves
+    class BriefDependencies < Base
+      tool_name "brief_dependencies"
+      title "Brief a whole Gemfile.lock: what breaks if this application moves"
+      description "Answer, for every gem a Gemfile.lock pins, what the corpus holds between what " \
+                  "the lock has and the newest *recorded* release of that gem.\n\n    " \
+                  "Reach for this before an upgrade you are planning rather than debugging: " \
+                  "`check_upgrade` answers one library's one window, and this answers the whole " \
+                  "document at once. Each gem comes back with a verdict — `blocking` (a recorded " \
+                  "change that is about a name you asked about, or a verified change with a fix), " \
+                  "`review` (recorded changes that do not match your names), `clean` (an examined " \
+                  "window that came back clean), or `unknown` — plus the changes, the examined " \
+                  "cells and the documented changes in separate fields.\n\n    " \
+                  "**`unknown` is not a pass.** A gem with no recorded release has no " \
+                  "destination this corpus can name, and a gem with no change and no examined " \
+                  "cell is silence rather than safety. Read `counts` first, then the blocking " \
+                  "gems, then the unknown ones.\n\n    " \
+                  "The lockfile is read to answer and never stored. Pass `symbols` per gem to " \
+                  "be told which changes are about your code, and `targets` to name a " \
+                  "destination other than the newest recorded release.\n\n    " \
+                  "Args:\n        " \
+                  "lockfile: The full text of the Gemfile.lock.\n        " \
+                  "ruby: The Ruby the move will run on; defaults to the lock's own.\n        " \
+                  "rails: The Rails release the move targets; defaults to the lock's own.\n        " \
+                  "symbols: Per-gem names you hold, as `{gem: \"name1,name2\"}`.\n        " \
+                  "targets: Per-gem destinations, as `{gem: \"1.2.3\"}`.\n        " \
+                  "checks: Include the examined cells. Defaults to true.\n    " \
+                  ""
+
+      input_schema(
+        { "properties" =>
+          { "lockfile" => { "title" => "Lockfile", "type" => "string" },
+           "ruby" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Ruby" },
+           "rails" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Rails" },
+           "symbols" => { "anyOf" => [{ "type" => "object" }, { "type" => "null" }], "default" => nil, "title" => "Symbols" },
+           "targets" => { "anyOf" => [{ "type" => "object" }, { "type" => "null" }], "default" => nil, "title" => "Targets" },
+           "checks" => { "default" => true, "title" => "Checks", "type" => "boolean" } },
+         "required" => ["lockfile"],
+         "type" => "object",
+         "title" => "brief_dependenciesArguments" }
+      )
+
+      output_schema(
+        { "properties" => { "result" => { "title" => "Result", "type" => "string" } },
+         "required" => ["result"],
+         "type" => "object",
+         "title" => "brief_dependenciesOutput" }
+      )
+
+      annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
+    end
+
+    # How much of a library this corpus has actually looked at
+    class CheckCoverage < Base
+      tool_name "check_coverage"
+      title "How much of a library this corpus has actually looked at"
+      description "Answer what the corpus knows it does not know about one library: the releases " \
+                  "it has recorded, the windows between them that have been examined — with the " \
+                  "outcomes (`clean`, `findings`, `unexaminable`, `failed`) and the checks that " \
+                  "ran — and the adjacent pairs nobody has looked at.\n\n    " \
+                  "Reach for this when you are deciding whether an empty `check_upgrade` " \
+                  "answer means clean or unexamined: it is the read that makes \"unknown is not " \
+                  "safe\" a number rather than a sentence. `clean` is per window, so read the " \
+                  "pair before treating it as this move.\n\n    " \
+                  "`empty_reason` says which empty it is: `unknown_library` (nobody has " \
+                  "recorded a release), `no_recorded_releases`, or `no_examinations` (releases " \
+                  "are recorded and nothing has run).\n\n    " \
+                  "Args:\n        " \
+                  "library: The gem, spelled as the index has it.\n        " \
+                  "ecosystem: `ruby` (RubyGems, the default) or `python` (PyPI).\n        " \
+                  "version: Keep only releases at or before this one.\n        " \
+                  "limit: How many windows to read.\n    " \
+                  ""
+
+      input_schema(
+        { "properties" =>
+          { "library" => { "title" => "Library", "type" => "string" },
+           "ecosystem" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Ecosystem" },
+           "version" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Version" },
+           "limit" => { "anyOf" => [{ "type" => "integer" }, { "type" => "null" }], "default" => nil, "title" => "Limit" } },
+         "required" => ["library"],
+         "type" => "object",
+         "title" => "check_coverageArguments" }
+      )
+
+      output_schema(
+        { "properties" => { "result" => { "title" => "Result", "type" => "string" } },
+         "required" => ["result"],
+         "type" => "object",
+         "title" => "check_coverageOutput" }
+      )
+
+      annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
+    end
+
+    # Ask for a window to be examined
+    class RequestExamination < Base
+      tool_name "request_examination"
+      title "Ask for a specific window to be examined"
+      description "Ask this corpus to examine a specific move: a library and two releases.\n\n    " \
+                  "Reach for this when the corpus does not cover a package you hold and you " \
+                  "want it looked at rather than waiting for the breadth seed to reach it. The " \
+                  "request weights the package above the seed — first-party demand, because " \
+                  "somebody asked by name — and the miner works it like any other lead. The " \
+                  "result is an ordinary examination cell, which the service joins on the " \
+                  "examination write; read it with `check_coverage`.\n\n    " \
+                  "A request is a demand signal, not evidence: it moves no report's status, " \
+                  "trust or counter, and it promises no turnaround. An operator key is required " \
+                  "and an agent key is refused. At most 20 live requests per operator per index, " \
+                  "and a request expires after 30 days.\n\n    " \
+                  "Args:\n        " \
+                  "library: The gem, spelled as the index has it.\n        " \
+                  "from_version: The release you are on now.\n        " \
+                  "to_version: The release you are moving to.\n        " \
+                  "ecosystem: `ruby` (RubyGems, the default) or `python` (PyPI).\n        " \
+                  "reason: Why, in your words. Optional.\n    " \
+                  ""
+
+      input_schema(
+        { "properties" =>
+          { "library" => { "title" => "Library", "type" => "string" },
+           "from_version" => { "title" => "From Version", "type" => "string" },
+           "to_version" => { "title" => "To Version", "type" => "string" },
+           "ecosystem" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Ecosystem" },
+           "reason" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Reason" } },
+         "required" => ["library", "from_version", "to_version"],
+         "type" => "object",
+         "title" => "request_examinationArguments" }
+      )
+
+      output_schema(
+        { "properties" => { "result" => { "title" => "Result", "type" => "string" } },
+         "required" => ["result"],
+         "type" => "object",
+         "title" => "request_examinationOutput" }
+      )
+
+      annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: false, destructive_hint: false)
+    end
+
+    # The windows callers have asked this corpus to examine
+    class ListExaminationRequests < Base
+      tool_name "list_examination_requests"
+      title "The windows callers have asked this corpus to examine"
+      description "Read the examination requests for an index: live and historical.\n\n    " \
+                  "Reach for this after `request_examination`, or to see what other callers " \
+                  "are waiting on. `state` is `open`, `accepted`, `satisfied` (with the " \
+                  "examination cell that answered it), `refused` (the machine cannot build the " \
+                  "release, with its reason) or `expired`. A request is a demand signal rather " \
+                  "than evidence.\n\n    " \
+                  "Args:\n        " \
+                  "ecosystem: `ruby` (RubyGems, the default) or `python` (PyPI).\n        " \
+                  "library: Narrow to one library.\n        " \
+                  "state: Narrow to one state.\n        " \
+                  "limit: How many to read.\n    " \
+                  ""
+
+      input_schema(
+        { "properties" =>
+          { "ecosystem" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Ecosystem" },
+           "library" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Library" },
+           "state" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "State" },
+           "limit" => { "anyOf" => [{ "type" => "integer" }, { "type" => "null" }], "default" => nil, "title" => "Limit" } },
+         "required" => [],
+         "type" => "object",
+         "title" => "list_examination_requestsArguments" }
+      )
+
+      output_schema(
+        { "properties" => { "result" => { "title" => "Result", "type" => "string" } },
+         "required" => ["result"],
+         "type" => "object",
+         "title" => "list_examination_requestsOutput" }
+      )
+
+      annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
+    end
+
+    # Your own contribution ledger
+    class MyContributions < Base
+      tool_name "my_contributions"
+      title "Your own contribution ledger"
+      description "Read your own contribution ledger: reports filed, examinations pushed, confirmations of other operators' reports, flags and outcomes.\n\n    Reach for this after a run of verifications, or when somebody asks what a key has contributed. The answer counts evidence, not volume: a report is a claim, an examination is an execution, and a confirmation is somebody else's reading. An author never counts as their own second voice. The read is your key's own ledger; there is no public leaderboard.\n\n    Args:\n        none.\n    "
+
+      input_schema(
+        { "properties" => {},
+         "required" => [],
+         "type" => "object",
+         "title" => "my_contributionsArguments" }
+      )
+
+      output_schema(
+        { "properties" => { "result" => { "title" => "Result", "type" => "string" } },
+         "required" => ["result"],
+         "type" => "object",
+         "title" => "my_contributionsOutput" }
+      )
+
+      annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
+    end
+
+    # Plan the typed fixes a change carries, and the diff they would make
+    class PlanFixes < Base
+      tool_name "plan_fixes"
+      title "Plan the typed fixes a change carries"
+      description "Plan the typed fixes a change carries, and the diff they would make.\n\n    Read this before editing source by hand. It returns the registry's rows: `mechanical` is a whole-token rewrite, `needs_review` is a config insert, patch or gem change that a person reads, and `forbidden` is a walker instruction rather than an edit. Pass `files` as a list of {path, content} pairs and the mechanical rewrites are applied to a copy; the answer is a line diff and nothing is written. A change with no row has no typed fix — that is not the same as safe.\n\n    Args:\n        change_key: Narrow to one change key. Omit it for the whole registry.\n        language: `ruby` is the only language this build serves.\n        files: A list of {path, content} pairs to dry-run. Nothing is written.\n    "
+
+      input_schema(
+        { "properties" =>
+          { "change_key" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Change Key" },
+           "language" => { "anyOf" => [{ "type" => "string" }, { "type" => "null" }], "default" => nil, "title" => "Language" },
+           "files" =>
+            { "anyOf" =>
+              [{ "type" => "array",
+                 "items" =>
+                  { "type" => "object",
+                    "properties" =>
+                     { "path" => { "type" => "string" }, "content" => { "type" => "string" } },
+                    "required" => ["path", "content"] } },
+               { "type" => "null" }],
+              "default" => nil, "title" => "Files" } },
+         "required" => [],
+         "type" => "object",
+         "title" => "plan_fixesArguments" }
+      )
+
+      output_schema(
+        { "properties" => { "result" => { "title" => "Result", "type" => "string" } },
+         "required" => ["result"],
+         "type" => "object",
+         "title" => "plan_fixesOutput" }
+      )
+
+      annotations(idempotent_hint: true, open_world_hint: true, read_only_hint: true, destructive_hint: false)
+    end
+
     # In the recording's order, because a client that shows tools in the order it receives them
     # shows ours the way the recorded surface chose.
-    ALL = [CheckLockfileRubyCompatibility, CheckRubyCompatibility, CheckUpgrade, ClaimReport, FindAnswer, FindRailsEdits, FlagReport, GemMigrations, GetReport, ListUpgradeTargets, PlanGemMoves, PrecheckReport, ProposeResolution, RailsLadder, RailsUpgradePlan, RecordOutcome, RecordReleaseFacts, ReleaseReport, SearchReports, ListUnverifiedReports, SubmitReport, SubmitReports, TriageFailures, VerifyReport, ListDecisions, GetDecision, ProposeDecision, CreateDecision, WithdrawDecision, ResolutionPlan, ScanUpgradeDelta, GetProjectProfile, ProposeProfile, GetScenario, GetRelease, CheckCompatibility, GetReleaseNotes, ListDependents].freeze
+    ALL = [CheckLockfileRubyCompatibility, CheckRubyCompatibility, CheckUpgrade, ClaimReport, FindAnswer, FindRailsEdits, FlagReport, GemMigrations, GetReport, ListUpgradeTargets, PlanGemMoves, PrecheckReport, ProposeResolution, RailsLadder, RailsUpgradePlan, RecordOutcome, RecordReleaseFacts, ReleaseReport, SearchReports, ListUnverifiedReports, SubmitReport, SubmitReports, TriageFailures, VerifyReport, ListDecisions, GetDecision, ProposeDecision, CreateDecision, WithdrawDecision, ResolutionPlan, ScanUpgradeDelta, GetProjectProfile, ProposeProfile, GetScenario, GetRelease, CheckCompatibility, GetReleaseNotes, ListDependents, BriefDependencies, CheckCoverage, RequestExamination, ListExaminationRequests, PlanFixes, MyContributions].freeze
   end
 end

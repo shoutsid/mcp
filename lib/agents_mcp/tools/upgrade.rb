@@ -29,6 +29,13 @@ module AgentsMcp
         changes.each do |change|
           when_ = "broke in #{change['broken_in']}"
           when_ += ", still worked in #{change['from_version']}" if change["from_version"]
+          # **The exact range, when the corpus has one.** `introduced_in` is the release a
+          # bisection established; its absence is a window rather than a release, and the basis
+          # says which of the two the caller is reading.
+          basis = change.dig("affected_versions", "basis")
+          exact = change.dig("affected_versions", "introduced_in")
+          when_ += ", introduced in #{exact}" if exact
+          when_ += " (#{basis})" if basis && basis != "observed_endpoints"
           marks = ""
           if change["affects_your_code"] == true
             marks = "  <-- yours"
@@ -120,6 +127,15 @@ module AgentsMcp
             lines << "  - #{cell['check_kind']}: #{cell['outcome']}" \
                      "#{cell['framework'] ? " on #{cell['framework']}" : ''} " \
                      "(#{cell['environment_digest']})"
+            # **How to run the same examination yourself, when the cell carries one.** It is
+            # untrusted third-party code — the service never executes it — and the status says
+            # whether it is runnable, a description with no command, or a format this build does
+            # not know.
+            reproduction = cell["reproduction"]
+            next unless reproduction.is_a?(Hash)
+
+            lines << "    reproduction: #{reproduction['status']}" \
+                     "#{reproduction['command'] ? " — #{reproduction['command']}" : ''}"
           end
         end
         documented = self.class.need(body, "documented")
@@ -222,6 +238,81 @@ module AgentsMcp
 
         lines << ""
         lines << self.class.need(body, "next_step")
+        Rendering.wrap(lines.join("\n"))
+      end
+
+      # **The registry, and what it would change, without changing it.** A fix plan is a read: the
+      # mechanical rewrites are applied to a copy of the files the caller sent, and the answer is a
+      # line diff. A `needs_review` or `forbidden` row is listed and never applied, because the
+      # service serves the registry and the client is the safety boundary. Nothing is written.
+      def plan_fixes(args)
+        params = {}
+        params["change_key"] = args["change_key"] if args["change_key"].to_s != ""
+        params["language"] = args["language"] if args["language"].to_s != ""
+        body = @client.request("GET", "/api/fixes", authenticated: true, params: params)
+        fixes = self.class.need(body, "fixes")
+        count = self.class.need(body, "count")
+        lines = ["#{count} fix(es) in the registry"]
+        lines << "no row means this change has no typed fix — not that it is safe" if fixes.empty?
+
+        fixes.each do |fix|
+          payload = fix["payload"].is_a?(Hash) ? fix["payload"] : {}
+          detail = if fix["kind"] == "rewrite"
+            "#{payload['old']} -> #{payload['new']}"
+          else
+            fix["kind"].to_s
+          end
+          marks = fix["applies"] ? "" : " (not applicable)"
+          lines << "- #{fix['change_key']} [#{fix['authority']}] " \
+                   "#{fix['safety']}#{marks}: #{detail}"
+        end
+
+        files = Array(args["files"]).grep(Hash)
+        mechanical = fixes.select { |fix| fix["safety"] == "mechanical" && fix["applies"] }
+        changed = 0
+        files.each do |file|
+          path = file["path"].to_s
+          next if path.empty?
+
+          before = file["content"].to_s
+          after = before.dup
+          applied = []
+          mechanical.each do |fix|
+            payload = fix["payload"].is_a?(Hash) ? fix["payload"] : {}
+            old = payload["old"].to_s
+            new = payload["new"].to_s
+            next if old.empty? || old == new
+            next unless after.match?(/\b#{Regexp.escape(old)}\b/)
+
+            after = after.gsub(/\b#{Regexp.escape(old)}\b/, new)
+            applied << fix
+          end
+          next if after == before
+
+          changed += 1
+          lines << ""
+          lines << "--- a/#{path}"
+          lines << "+++ b/#{path}"
+          before.lines.each_with_index do |old_line, index|
+            new_line = after.lines[index].to_s
+            next if new_line == old_line
+
+            lines << "@@ line #{index + 1} @@"
+            lines << "-#{old_line.chomp}"
+            lines << "+#{new_line.chomp}"
+          end
+          lines << "applied: #{applied.map { |fix| fix['change_key'] }.join(', ')}"
+        end
+
+        if files.empty?
+          lines << ""
+          lines << "no files were sent; this is the registry only."
+        elsif changed.zero?
+          lines << ""
+          lines << "no mechanical fix changes the files you sent."
+        end
+        lines << ""
+        lines << "nothing was written."
         Rendering.wrap(lines.join("\n"))
       end
     end

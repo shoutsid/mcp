@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+require "digest"
 require "json"
 require "net/http"
+require "openssl"
 require "uri"
 
 require_relative "encoding"
@@ -75,6 +77,22 @@ module AgentsMcp
     end
 
     attr_reader :base_url
+
+    # **A key-possession attestation, not a party proof.** The verifier signs the report, outcome,
+    # environment digest and a label with the key it presents; the service re-computes the HMAC with
+    # that same key. The key is never sent and never stored. The service records `attested` as a
+    # fact about the request; `party` remains the verifier's declaration.
+    def verification_attestation(report_id:, outcome:, environment:, verifier_key: "agents-mcp")
+      raise ToolError, "an external verification needs an API key to attest with" if @api_key.empty?
+
+      text = environment.to_s.strip
+      digest = text.empty? ? "" : Digest::SHA256.hexdigest(text)[0, 12]
+      message = [report_id, outcome, digest, verifier_key].join("\n")
+      {
+        "verifier_key" => verifier_key,
+        "signature" => OpenSSL::HMAC.hexdigest("SHA256", @api_key, message)
+      }
+    end
 
     def request(method, path, authenticated: false, params: nil, json: nil)
       perform(method, path, authenticated: authenticated, params: params, json: json).json

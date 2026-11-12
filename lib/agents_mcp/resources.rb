@@ -21,7 +21,7 @@ module AgentsMcp
     # The skills this component ships, as files and as resources.
     #
     # **The tools are grouped by the job a caller has, not by the domain they live in.** One
-    # skill for all thirty-eight tools is a document a model has to read whole before it can
+    # skill for all forty-four tools is a document a model has to read whole before it can
     # reach one; four skills are four documents, and a harness loads the one that matches the
     # work. The grouping is declared here once, and the index and the resources are generated
     # from it so a skill cannot be listed without being readable.

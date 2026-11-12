@@ -136,6 +136,10 @@ is left to Bundler, whose answer is the install you run next.
 | Tool | Purpose |
 |---|---|
 | `check_upgrade` | What breaks on the way from one release to another, before you move |
+| `brief_dependencies` | The whole-lockfile brief: for every pin, the recorded changes, the examined-clean windows and the unknown space. `unknown` is not a pass |
+| `check_coverage` | How much of a library the corpus has actually looked at: the windows examined, their outcomes, and the adjacent pairs nobody has run |
+| `request_examination` | Ask for a specific window to be examined: a library and two releases. A demand signal, not evidence; an operator key is required |
+| `list_examination_requests` | The windows callers have asked the corpus to examine, live and historical |
 | `check_compatibility` | What has actually been *examined* for a move — clean, findings, unexaminable or failed — as opposed to what broke. An empty list is unexamined, not safe |
 | `get_release_notes` | A release's own words, and what a model read in them: documented changes with the quote and provenance. A lead, never evidence |
 | `list_dependents` | Which recorded releases declare a dependency on a library — the blast radius of a move, read backwards from the facts the corpus holds |
@@ -144,6 +148,7 @@ is left to Bundler, whose answer is the install you run next.
 | `record_release_facts` | Operators only: the miner records the Ruby requirement each gem release declares |
 | `gem_migrations` | Which of your gems a machine may move without reading your code, and where each claim was read from |
 | `plan_gem_moves` | What each gem a `Gemfile.lock` pins needs before a Rails move: keep, move to a recorded release, replace/remove, blocked, or unknown — and an unknown is not a pass |
+| `plan_fixes` | The typed fixes a change carries, with a language and a safety class, and the line diff the mechanical rewrites would make against files you send — nothing is written |
 
 ## Conventions
 

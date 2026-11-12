@@ -23,16 +23,31 @@ module AgentsMcp
       end
 
       def verify_report(args)
+        report_id = args["report_id"]
+        party = args["party"].to_s
+        unless ["", "first_party", "external"].include?(party)
+          raise ToolError, "`party` must be first_party or external"
+        end
+
         payload = { "outcome" => args["outcome"] }
         payload["environment"] = args["environment"] if args["environment"]
         payload["notes"] = args["notes"] if args["notes"]
+        unless party.empty?
+          payload["party"] = party
+          if party == "external"
+            payload["attestation"] = @client.verification_attestation(
+              report_id: report_id, outcome: args["outcome"],
+              environment: args["environment"].to_s
+            )
+          end
+        end
 
-        report_id = args["report_id"]
         result = @client.request(
           "POST", @client.report_path(report_id, "/verify"), authenticated: true, json: payload
         )
         report = result["report"] || {}
-        "Recorded #{args['outcome']} for #{report_id}. " \
+        origin = result["party"] ? " party=#{result['party']} attested=#{Rendering.py(result['attested'])}" : ""
+        "Recorded #{args['outcome']} for #{report_id}.#{origin} " \
           "status=#{report['status']} " \
           "confirmations=#{result['confirmations']}/#{result['confirmations_required']} " \
           "counted_toward_promotion=#{Rendering.py(result['counted'])}"

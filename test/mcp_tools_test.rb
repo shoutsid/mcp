@@ -20,6 +20,37 @@ class McpToolsTest < McpTest
     api.tools
   end
 
+  def test_find_answer_renders_the_follow_up_that_closes_the_loop
+    body = {
+      "query" => "stream() got an unexpected keyword argument", "verdict" => "answered",
+      "confidence" => "medium",
+      "answer" => a_report(
+        "report_id" => "77777777-7777-4777-8777-777777777777",
+        "resolution" => "Pass timeout via the constructor.", "version_relation" => "exact"
+      ),
+      "reasons" => [], "caveats" => [], "dissent" => [], "alternatives" => [],
+      "fixes" => [], "signatures" => [], "candidates_considered" => 1, "relaxed" => false,
+      "follow_up" => {
+        "report_id" => "77777777-7777-4777-8777-777777777777",
+        "resolution_id" => "99999999-9999-4999-8999-999999999999",
+        "what" => "Record whether this fix worked for you.",
+        "call" => "POST /api/reports/{report_id}/outcome",
+        "body" => { "outcome" => "solved | partial | not_helpful" },
+        "counts" => { "solved" => 2, "partial" => 1, "not_helpful" => 0 },
+        "caveat" => "Your own report's verdict is stored but not counted."
+      },
+      "next_step" => "Apply the resolution, then record the outcome."
+    }
+
+    out = answer(body).find_answer({ "query" => "stream() rejected my timeout" })
+
+    assert_includes out, "after you apply it: Record whether this fix worked for you."
+    assert_includes out, "outcome=solved|partial|not_helpful"
+    assert_includes out, "resolution_id=99999999-9999-4999-8999-999999999999"
+    assert_includes out, "recorded so far: solved 2, partial 1, not_helpful 0"
+    assert_includes out, "not counted"
+  end
+
   def test_find_answer_renders_the_evidence_not_just_the_fix
     body = {
       "query" => "stream() got an unexpected keyword argument", "verdict" => "answered",
@@ -704,6 +735,28 @@ class McpToolsTest < McpTest
     assert_includes out, 'resolution_id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"'
   end
 
+  # **The runnable half of a claim.** An examination that carried a reproduction is rendered as
+  # untrusted third-party code with its status, so a model reads it rather than running it blind.
+  def test_get_report_renders_a_reproduction_as_untrusted_code
+    report = a_report(
+      "reproductions" => [
+        { "examination_id" => "33333333-3333-4333-8333-333333333333",
+          "check_kind" => "differential", "outcome" => "findings",
+          "reproduction" => {
+            "format" => 1, "status" => "description", "library" => "actionpack",
+            "manifest" => %(gem "actionpack", "5.1.0"\n),
+            "expected" => { "exception" => "NoMethodError" }
+          } }
+      ]
+    )
+
+    out = answer(report).get_report({ "report_id" => "11111111-1111-4111-8111-111111111111" })
+
+    assert_includes out, "reproduction (description, examination 33333333-3333-4333-8333-333333333333)"
+    assert_includes out, "untrusted third-party code"
+    assert_includes out, "expected: NoMethodError"
+  end
+
   # The edge is the point of recording it: a model reading the weaker half has to be told which report
   # stands in for it, or it acts on the row that says "nothing replaced it".
   def test_get_report_names_the_report_that_supersedes_it
@@ -980,6 +1033,51 @@ class McpToolsTest < McpTest
   # The routing read: what happens to each pin when the move's Ruby and Rails are named. The
   # rendering keeps the two things a caller acts on apart — the gems with somewhere to go,
   # and the unknowns, which are the list of what to record before trusting the answer.
+  def test_brief_dependencies_renders_the_counts_and_the_unknown_space
+    body = {
+      "ecosystem" => "ruby", "ruby" => "2.7.8", "rails" => "5.0.7.2", "gems_read" => 3,
+      "counts" => { "blocking" => 1, "review" => 0, "clean" => 1, "unknown" => 1 },
+      "stored" => false,
+      "gems" => [
+        { "name" => "actionpack", "version" => "5.0.7.2", "target" => "5.1.0",
+          "target_source" => "recorded", "verdict" => "blocking",
+          "changes" => [
+            { "report_id" => "11111111-1111-4111-8111-111111111111",
+              "title" => "actionpack 5.1.0 renamed before_filter",
+              "subject" => "before_filter", "change_kind" => "symbol_renamed",
+              "broken_in" => "5.1.0", "affects_your_code" => true }
+          ], "clean" => [], "reason" => "1 of 1 change(s) are about a name you asked about." },
+        { "name" => "kaminari", "version" => "0.16.3", "target" => "1.0.0",
+          "target_source" => "recorded", "verdict" => "clean", "changes" => [],
+          "clean" => [{ "check_kind" => "resolve", "outcome" => "clean" }],
+          "reason" => "No recorded change crosses kaminari 0.16.3 → 1.0.0." },
+        { "name" => "who-knows", "version" => "1.0.0", "target" => nil,
+          "target_source" => "none", "verdict" => "unknown", "changes" => [], "clean" => [],
+          "requested" => true,
+          "reason" => "No recorded release of who-knows is newer than 1.0.0." }
+      ],
+      "next_step" => "1 gem(s) cross a recorded break (actionpack); read those first."
+    }
+
+    out = answer(body).brief_dependencies(
+      { "lockfile" => "GEM\n  specs:\n    actionpack (5.0.7.2)\n",
+        "symbols" => { "actionpack" => "before_filter" } }
+    )
+
+    call = api.calls[0]
+    assert_equal "POST", call.method
+    assert call.path.end_with?("/api/releases/impact")
+    assert_equal "ruby", call.json["ecosystem"]
+    assert_equal({ "actionpack" => "before_filter" }, call.json["symbols"])
+    assert_includes out, "3 gem(s) pinned; blocking 1, review 0, clean 1, unknown 1"
+    assert_includes out, "BLOCKING:"
+    assert_includes out, "actionpack 5.0.7.2 -> 5.1.0"
+    assert_includes out, "symbol_renamed: before_filter (broke in 5.1.0)  <-- yours"
+    assert_includes out, "UNKNOWN:"
+    assert_includes out, "a request to examine this window is already open"
+    assert_includes out, "1 gem(s) cross a recorded break"
+  end
+
   def test_plan_gem_moves_renders_the_verdicts_and_flags_the_unknowns
     body = {
       "ruby" => "2.1.10", "rails" => "4.1.0", "gems_read" => 4,
@@ -1637,6 +1735,31 @@ class McpToolsTest < McpTest
     assert_includes out, "counted_toward_promotion=False"
   end
 
+  # **The verifier signs with the key it presents.** An external declaration sends the HMAC the
+  # service can re-compute; the client never puts the key in the body.
+  def test_an_external_verification_is_attested_with_the_presented_key
+    body = {
+      "report" => { "status" => "resolved_unverified" }, "confirmations" => 1,
+      "confirmations_required" => 2, "counted" => true,
+      "party" => "external", "attested" => true
+    }
+    id = "44444444-4444-4444-8444-444444444444"
+
+    out = answer(body).verify_report(
+      { "report_id" => id, "outcome" => "reproduced",
+        "environment" => "ruby 3.3.12", "party" => "external" }
+    )
+
+    payload = api.calls[0].json
+    assert_equal "external", payload["party"]
+    digest = Digest::SHA256.hexdigest("ruby 3.3.12")[0, 12]
+    expected = OpenSSL::HMAC.hexdigest("SHA256", "test-key",
+      [id, "reproduced", digest, "agents-mcp"].join("\n"))
+    assert_equal expected, payload.dig("attestation", "signature")
+    refute_includes JSON.generate(payload), "test-key"
+    assert_includes out, "party=external attested=True"
+  end
+
   # **`check_compatibility` answers the question `check_upgrade` cannot: was this move examined?**
   # It reads the same route and renders the `examined`/`clean` halves, so a clean cell is a result
   # and an empty list is an absence rather than a pass.
@@ -1711,6 +1834,63 @@ class McpToolsTest < McpTest
     assert_equal "actionpack", call.params["library"]
     assert_includes out, "2 recorded release(s) depend on actionpack"
     assert_includes out, "rails: 7.1.6 requires = 7.1.6"
+  end
+
+  # **A fix plan is a read: the registry plus the diff it would make, never a write.** The
+  # mechanical rewrite is applied to a copy, `needs_review` is listed and not applied, and the
+  # answer says nothing was written.
+  def test_plan_fixes_returns_the_registry_and_a_dry_run_diff
+    body = {
+      "fixes" => [
+        { "fix_id" => "curated:ruby|rails|x", "change_key" => "ruby|rails|x",
+          "kind" => "rewrite", "authority" => "curated", "safety" => "mechanical",
+          "applies" => true, "language" => "ruby",
+          "payload" => { "old" => "before_filter", "new" => "before_action" } },
+        { "fix_id" => "promoted:1", "change_key" => "ruby|rails|x",
+          "kind" => "patch", "authority" => "promoted", "safety" => "needs_review",
+          "applies" => true, "language" => "ruby", "payload" => { "path" => "x.rb" } }
+      ],
+      "count" => 2, "limit" => 50, "limit_max" => 200,
+      "languages" => ["ruby"], "safety" => %w[mechanical needs_review forbidden]
+    }
+
+    out = answer(body).plan_fixes({
+      "change_key" => "ruby|rails|x",
+      "files" => [{ "path" => "app/controllers/x.rb",
+                    "content" => "before_filter :set_x\n" }]
+    })
+
+    call = api.calls.last
+    assert call.path.end_with?("/api/fixes"), call.path
+    assert_equal "ruby|rails|x", call.params["change_key"]
+    assert_equal "test-key", call.headers["X-API-Key"]
+    assert_includes out, "2 fix(es) in the registry"
+    assert_includes out, "[curated] mechanical"
+    assert_includes out, "[promoted] needs_review"
+    assert_includes out, "--- a/app/controllers/x.rb"
+    assert_includes out, "-before_filter :set_x"
+    assert_includes out, "+before_action :set_x"
+    assert_includes out, "nothing was written"
+  end
+
+  def test_my_contributions_reads_the_operator_ledger
+    body = {
+      "operator_id" => "op-1", "name" => "A Contributor", "vouched" => true,
+      "account_id" => nil,
+      "contributions" => { "reports" => 2, "examinations" => 5, "confirmations" => 1,
+                           "flags" => 0, "outcomes" => 3 }
+    }
+
+    out = answer(body).my_contributions({})
+
+    call = api.calls.last
+    assert call.path.end_with?("/api/operators/me/contributions"), call.path
+    assert_equal "test-key", call.headers["X-API-Key"]
+    assert_includes out, "A Contributor — vouched"
+    assert_includes out, "reports filed: 2"
+    assert_includes out, "examinations pushed: 5"
+    assert_includes out, "confirmations of others: 1"
+    assert_includes out, "evidence, not a reputation"
   end
 
   private

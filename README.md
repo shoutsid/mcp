@@ -8,7 +8,7 @@ file is the reference behind it.
 The protocol is the official Ruby SDK (`mcp` 1.8). The handshake, the tool list, the call,
 pagination, cancellation and both transports are the gem's; what is here is the surface —
 what a tool is called and what it says — and the behaviour behind it. `lib/agents_mcp/surface.rb`
-declares the thirty-eight `MCP::Tool` subclasses, `lib/agents_mcp/tools/` implements what they do,
+declares the forty-four `MCP::Tool` subclasses, `lib/agents_mcp/tools/` implements what they do,
 and `data/surface.json` is the frozen recording the declared surface is reconciled against
 (`test/mcp_tools_golden_test.rb`). The recording is no longer the bytes a client receives: a
 server that serves a recorded handshake is reproducing one answer to the protocol rather than
@@ -21,10 +21,15 @@ tell.
 | `check_ruby_compatibility` | Whether one gem release runs on the Ruby version you are moving to, from the release's declared requirement — `unknown` is never a pass |
 | `record_release_facts` | The miner's write: the Ruby requirement each gem release declares, recorded against the release |
 | `check_upgrade` | What breaks on the way from one release to another — asked *before* the failure |
+| `brief_dependencies` | The whole-lockfile brief: for every pin, the recorded changes, the examined-clean windows and the unknown space, kept apart. `unknown` is not a pass |
+| `check_coverage` | How much of a library the corpus has actually looked at: the windows examined, their outcomes, and the adjacent pairs nobody has run |
+| `request_examination` | Ask for a specific window to be examined: a library and two releases. A demand signal, not evidence; an operator key is required |
+| `list_examination_requests` | The windows callers have asked the corpus to examine, live and historical |
 | `check_compatibility` | What has actually been *examined* for a move — clean, findings, unexaminable or failed — as opposed to what broke. An empty list is unexamined, not safe |
 | `get_release_notes` | A release's own words, and what a model read in them: documented changes with the quote and provenance. A lead, never evidence |
 | `list_dependents` | Which recorded releases declare a dependency on a library — the blast radius of a move, read backwards from the facts the corpus holds |
 | `find_answer` | What to do about a failure, and how much to trust it |
+| `my_contributions` | Your own evidence ledger: reports, examinations, non-author confirmations, flags and outcomes — a count is evidence, not a reputation |
 | `find_rails_edits` | The call sites in your own files for a Rails upgrade: the whole-word renames applied, everything else listed with the reason and not rewritten |
 | `scan_upgrade_delta` | The same scan over only the files that moved since your manifest: added, changed, unchanged, deleted and skipped, with the edits they carry |
 | `gem_migrations` | Which of your gems a machine may move without reading your code — a dead source, a fork for a release that shipped — and which need a decision |
@@ -42,6 +47,7 @@ tell.
 | `rails_ladder` | Which Rails releases the ladder knows: where it starts, where it tops out, and each step's Ruby floor and how much of it a machine may apply |
 | `rails_upgrade_plan` | The ordered steps of a Rails upgrade from 3.2 to now, each with the changes Rails' own guide documents and the changes this corpus executed |
 | `plan_gem_moves` | What each gem a `Gemfile.lock` pins needs before a Rails move: keep, move to a recorded release, replace/remove, blocked, or unknown — and an unknown is not a pass |
+| `plan_fixes` | The typed fixes a change carries, each with a language and a safety class, and the line diff the mechanical rewrites would make against files you send — nothing is written |
 | `list_upgrade_targets` | Which Rails applications this service is walking forward, best first, with the reasons for each one's place and what happened when it was tried — the corpus's own upgrade work, not a lookup |
 | `list_decisions` | The blocks an upgrade walk is waiting on: the stage, the change, the evidence and the options, newest first |
 | `get_decision` | One block in full: the context, evidence, typed options, proposals, accepted answer and the runs that carried its effects |
@@ -65,7 +71,7 @@ and read as a resource:
 | Skill | Job | Tools |
 |---|---|---|
 | `agents` | The core loop for a failure you already have: search, precheck, verify, submit, claim, resolve, outcome | 16 |
-| `agents-upgrade` | Before a dependency or Ruby move: `check_upgrade`, `check_compatibility`, `get_release_notes`, `list_dependents`, `gem_migrations`, `plan_gem_moves`, the Ruby checks | 9 |
+| `agents-upgrade` | Before a dependency or Ruby move: `check_upgrade`, `brief_dependencies`, `check_coverage`, `request_examination`, `list_examination_requests`, `check_compatibility`, `get_release_notes`, `list_dependents`, `gem_migrations`, `plan_gem_moves`, the Ruby checks | 13 |
 | `agents-rails` | A Rails framework upgrade: the ladder, the plan, the edits in your own files, the applications walked | 5 |
 | `agents-decisions` | The questions a blocked upgrade walk stopped on, and the profile facts it is missing | 8 |
 

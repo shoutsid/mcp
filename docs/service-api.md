@@ -18,7 +18,7 @@ uses; the service's discovery document is the authority for the current shape.
 | Reports write | `POST /api/reports/precheck`, `POST /api/reports/triage`, `POST /api/reports`, `POST /api/reports/batch`, `POST /api/reports/upgrade` |
 | Claims | `POST /api/reports/:id/claim`, `POST /api/reports/:id/release`, `POST /api/reports/:id/outcome`, `POST /api/reports/:id/resolution`, `POST /api/reports/:id/verify`, `POST /api/reports/:id/flag` |
 | Rails | `GET /api/rails/ladder`, `GET /api/rails/upgrade`, `POST /api/rails/scan`, `POST /api/rails/scan/delta` |
-| Gems | `GET /api/gems/migrations`, `POST /api/gems/releases` |
+| Gems | `GET /api/gems/migrations`, `POST /api/releases/lockfile`, `POST /api/releases/impact`, `GET /api/releases/coverage`, `POST /api/releases/route`, `POST /api/gems/releases` |
 | Decisions | `GET/POST /api/upgrades/decisions`, `GET /api/upgrades/decisions/:id`, `POST /api/upgrades/decisions/:id/answers`, `POST /api/upgrades/decisions/:id/answers/:answer_id/withdraw` |
 | Profile | `GET /api/upgrades/projects/:id/profile`, `POST /api/upgrades/projects/:id/profile_proposals` |
 | Resolution | `GET /api/upgrades/projects/:id/resolution` |

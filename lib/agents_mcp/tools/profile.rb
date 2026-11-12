@@ -9,6 +9,25 @@ module AgentsMcp
     # it and suggest fields with a source for each, and a person accepts the ones they believe.
     # There is no tool that accepts: the route exists for the account administrator.
     module Profile
+      # **Your own evidence, counted by what it is.** A report is a claim, an examination is an
+      # execution, and a confirmation is somebody else's reading; the ledger keeps them apart.
+      def my_contributions(_args = {})
+        body = @client.request("GET", "/api/operators/me/contributions", authenticated: true)
+        counts = self.class.need(body, "contributions")
+        lines = ["#{self.class.need(body, 'name')} — " \
+                 "#{body['vouched'] ? 'vouched' : 'unvouched'}"]
+        lines << "account: #{body['account_id']}" if body["account_id"]
+        lines << "reports filed: #{counts['reports']}"
+        lines << "examinations pushed: #{counts['examinations']}"
+        lines << "confirmations of others: #{counts['confirmations']}"
+        lines << "flags: #{counts['flags']}"
+        lines << "outcomes: #{counts['outcomes']}"
+        lines << ""
+        lines << "A count is evidence, not a reputation: an examination is an execution, a " \
+                 "report is a claim, and only somebody else's confirmation is a second voice."
+        Rendering.wrap(lines.join("\n"))
+      end
+
       def get_project_profile(args)
         project_id = args["project_id"].to_s
         raise ToolError, "`project_id` is required" if project_id.empty?

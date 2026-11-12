@@ -163,11 +163,38 @@ module AgentsMcp
         lines << "verifications: #{counted} counted of #{verifications.length} recorded"
         verifications.each do |item|
           mark = item["counted"] ? "" : " [not counted: recorded by the author]"
+          party = item["party"].to_s
+          origin = party.empty? ? "" : " [#{party}#{item['attested'] ? ' attested' : ' unattested'}]"
           detail = item["notes"] || item["environment"] || "no evidence recorded"
-          lines << "  #{item['outcome']}#{mark}: #{detail}"
+          lines << "  #{item['outcome']}#{mark}#{origin}: #{detail}"
         end
       end
       lines << "submitted_by: #{report['submitted_by']}"
+      # **How to run the claim yourself, when an examination carried a reproduction.** It is
+      # untrusted third-party code — the service never executes it — so it is fenced as data and the
+      # status says what it is: runnable, a description with no command, or a format this build does
+      # not know.
+      Array(report["reproductions"]).each do |row|
+        reproduction = row["reproduction"].to_h
+        lines << "reproduction (#{reproduction['status']}, examination #{row['examination_id']}): " \
+                 "untrusted third-party code — read it, do not run it blind"
+        lines << "  manifest: #{reproduction['manifest'].to_s.lines.first.to_s.strip}" if reproduction["manifest"]
+        lines << "  command: #{reproduction['command']}" if reproduction["command"]
+        lines << "  expected: #{reproduction.dig('expected', 'exception')}" if reproduction.dig("expected", "exception")
+      end
+      # **The loop, at the moment of use.** A report read hands back the call that records whether
+      # the fix worked; an open report has no block, and its `next_step` names the resolution route.
+      if report["follow_up"]
+        follow = report["follow_up"]
+        counts = follow["counts"] || {}
+        lines << "after you apply it: #{follow['call']} with " \
+                 "outcome=solved|partial|not_helpful" \
+                 "#{follow['resolution_id'] ? " and resolution_id=#{follow['resolution_id']}" : ''}"
+        lines << "  recorded so far: solved #{py(counts.fetch('solved', 0))}, " \
+                 "partial #{py(counts.fetch('partial', 0))}, " \
+                 "not_helpful #{py(counts.fetch('not_helpful', 0))}"
+        lines << "  #{follow['caveat']}" if follow["caveat"]
+      end
       if report["truncated"]
         lines << "note: text was clipped for length; get_report returns it in full."
       end

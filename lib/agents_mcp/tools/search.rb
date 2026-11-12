@@ -104,6 +104,22 @@ module AgentsMcp
                      "trust #{Rendering.py(item['trust'])} | #{item['title']}"
           end
         end
+        # **The loop, at the moment of use.** The service hands back the call that records whether
+        # the fix worked; rendering it here is what turns the corpus's promise into a row. An open
+        # report has no block — its `next_step` names the resolution route instead.
+        if body["follow_up"]
+          follow = body["follow_up"]
+          lines << ""
+          lines << "after you apply it: #{follow['what']}"
+          lines << "  #{follow['call']} with " \
+                   "outcome=solved|partial|not_helpful" \
+                   "#{follow['resolution_id'] ? " and resolution_id=#{follow['resolution_id']}" : ''}"
+          counts = follow["counts"] || {}
+          lines << "  recorded so far: solved #{Rendering.py(counts.fetch('solved', 0))}, " \
+                   "partial #{Rendering.py(counts.fetch('partial', 0))}, " \
+                   "not_helpful #{Rendering.py(counts.fetch('not_helpful', 0))}"
+          lines << "  #{follow['caveat']}" if follow["caveat"]
+        end
         lines << ""
         lines << "next: #{self.class.need(body, 'next_step')}"
 
